@@ -235,7 +235,7 @@ export class GoogleDriveService {
     }
   }
 
-  // Búsqueda mejorada con LIKE (caracteres similares)
+  // Búsqueda mejorada con LIKE (caracteres similares) - SOLO ARCHIVOS
   async searchFiles(q: string, driveId?: string): Promise<DriveFile[]> {
     if (!this.drive) return [];
     try {
@@ -244,10 +244,10 @@ export class GoogleDriveService {
       // Escapar caracteres especiales para la query de Google Drive
       const escapedQuery = q.replace(/['"]/g, "\\'");
       
-      // Query simplificada que funciona mejor con Google Drive API
-      const query = `name contains '${escapedQuery}' and trashed=false`;
+      // Query que busca SOLO archivos (no carpetas ni unidades)
+      const query = `name contains '${escapedQuery}' and trashed=false and mimeType != 'application/vnd.google-apps.folder'`;
       
-      console.log('📝 Search query:', query);
+      console.log('📝 Search query (files only):', query);
       
       const res = await this.drive.files.list({
         q: query,
@@ -263,8 +263,22 @@ export class GoogleDriveService {
       console.log('📁 Files found by API:', files.length);
       console.log('📂 Sample files:', files.slice(0, 3).map((f: DriveFile) => f.name));
       
-      // Filtrar resultados para coincidencias más precisas
+      // Filtrar resultados para coincidencias más precisas - SOLO ARCHIVOS DE AUDIO
+      const audioMimeTypes = [
+        'audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/m4a',
+        'audio/mp4', 'audio/aac', 'audio/ogg', 'audio/flac',
+        'audio/x-m4a', 'audio/x-mp4'
+      ];
+      
       const filteredFiles = files.filter((file: DriveFile) => {
+        // Solo archivos de audio
+        const isAudioFile = audioMimeTypes.some(mimeType => 
+          file.mimeType.includes(mimeType.split('/')[1]) || 
+          file.mimeType === mimeType
+        );
+        
+        if (!isAudioFile) return false;
+        
         const fileName = file.name.toLowerCase();
         const searchTerm = q.toLowerCase();
         
