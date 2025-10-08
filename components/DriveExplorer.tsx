@@ -316,31 +316,31 @@ export default function DriveExplorer() {
           <div className="absolute top-16 left-1/2 w-2 h-2 bg-orange-500 rounded-full animate-pulse opacity-50"></div>
           <div className="absolute top-6 right-8 w-1 h-1 bg-yellow-500 rounded-full animate-bounce opacity-90"></div>
         </div>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-0.5 sm:py-1">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-6">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 py-2 sm:py-3">
+          <div className="flex flex-col space-y-4 sm:space-y-0 sm:flex-row sm:items-center sm:justify-between">
             {/* Logo BDJ Remixer */}
-            <div className="flex items-center">
+            <div className="flex items-center justify-center sm:justify-start">
               <img 
                 src="/LOGO.png" 
                 alt="BDJ Remixer Logo" 
-                className="h-8 sm:h-10 md:h-12 lg:h-16 xl:h-20 2xl:h-24 w-auto object-contain"
+                className="h-10 sm:h-12 md:h-14 lg:h-16 xl:h-18 2xl:h-20 w-auto object-contain"
               />
             </div>
 
             {/* Barra de búsqueda central */}
-            <div className="relative w-full sm:flex-1 max-w-2xl">
+            <div className="relative w-full sm:flex-1 sm:max-w-2xl sm:mx-4">
               <div className="relative">
-                <Search className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <Input
-                  placeholder="Buscar archivos, carpetas o unidades compartidas..."
+                  placeholder="Buscar archivos, carpetas..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 sm:pl-12 pr-10 sm:pr-12 py-2 sm:py-3 text-sm sm:text-lg bg-white/10 border border-red-700 rounded-xl shadow-lg focus:bg-white/20 focus:ring-2 focus:ring-red-400 text-white placeholder-gray-300 w-full"
+                  className="pl-10 pr-10 py-3 text-sm bg-white/10 border border-red-700 rounded-xl shadow-lg focus:bg-white/20 focus:ring-2 focus:ring-red-400 text-white placeholder-gray-300 w-full"
                 />
                 {isSearching && (
-                  <div className="absolute right-3 sm:right-4 top-1/2 transform -translate-y-1/2 flex items-center gap-2">
-                    <Loader2 className="h-4 w-4 sm:h-5 sm:w-5 animate-spin text-red-400" />
-                    <span className="text-red-400 text-xs sm:text-sm font-medium">Buscando...</span>
+                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center gap-1">
+                    <Loader2 className="h-4 w-4 animate-spin text-red-400" />
+                    <span className="text-red-400 text-xs font-medium hidden sm:inline">Buscando...</span>
                   </div>
                 )}
               </div>
@@ -349,9 +349,9 @@ export default function DriveExplorer() {
             {/* Botón Comprar Acceso */}
             <Button 
               onClick={() => setIsWhatsAppModalOpen(true)}
-              className="bg-red-600 hover:bg-red-700 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-semibold shadow-lg text-sm sm:text-base whitespace-nowrap"
+              className="bg-red-600 hover:bg-red-700 text-white px-4 py-3 rounded-lg font-semibold shadow-lg text-sm w-full sm:w-auto"
             >
-              💬 <span className="hidden sm:inline">Comprar Acceso</span><span className="sm:hidden">Acceso</span>
+              💬 Comprar Acceso
             </Button>
           </div>
         </div>
@@ -359,13 +359,13 @@ export default function DriveExplorer() {
 
       {/* Contenido Principal */}
       <div className="flex-1">
-        <div className="max-w-7xl mx-auto p-4 sm:p-6 -mt-2 sm:-mt-4 relative z-10">
+        <div className="max-w-7xl mx-auto p-3 sm:p-6 relative z-10">
 
         {/* Navegación - Solo se muestra cuando hay breadcrumbs */}
         {stack.length > 0 && (
-          <div className="mb-8">
-            <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl shadow-lg p-4 border border-gray-700">
-              <div className="flex items-center gap-4">
+          <div className="mb-6">
+            <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl shadow-lg p-3 sm:p-4 border border-gray-700">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
                 {/* Botón de regresar */}
                 <Button 
                   variant="outline"
@@ -376,43 +376,47 @@ export default function DriveExplorer() {
                       resetToDrives();
                     }
                   }}
-                  className="flex items-center gap-2 bg-gray-700/50 hover:bg-gray-600/50 text-white border-gray-600"
+                  className="flex items-center gap-2 bg-gray-700/50 hover:bg-gray-600/50 text-white border-gray-600 w-full sm:w-auto justify-center sm:justify-start"
                 >
                   <ArrowLeft className="h-4 w-4" />
                   Regresar
                 </Button>
                 
                 {/* Breadcrumbs */}
-                <Breadcrumb>
-                  <BreadcrumbList>
-                    <BreadcrumbItem>
-                      <BreadcrumbLink 
-                        onClick={resetToDrives} 
-                        className="cursor-pointer text-red-400 hover:text-red-300 font-medium"
-                      >
-                        🏠 Unidades
-                      </BreadcrumbLink>
-                    </BreadcrumbItem>
-                    <BreadcrumbSeparator />
-                    {stack.map((item, index) => (
-                      <React.Fragment key={`${item.id}-${index}`}>
-                        <BreadcrumbItem>
-                          {index === stack.length - 1 ? (
-                            <BreadcrumbPage className="text-white font-semibold">{item.name}</BreadcrumbPage>
-                          ) : (
-                            <BreadcrumbLink 
-                              onClick={() => goBackTo(index)} 
-                              className="cursor-pointer text-red-400 hover:text-red-300 font-medium"
-                            >
-                              {item.name}
-                            </BreadcrumbLink>
-                          )}
-                        </BreadcrumbItem>
-                        {index < stack.length - 1 && <BreadcrumbSeparator />}
-                      </React.Fragment>
-                    ))}
-                  </BreadcrumbList>
-                </Breadcrumb>
+                <div className="flex-1 min-w-0">
+                  <Breadcrumb>
+                    <BreadcrumbList className="flex-wrap">
+                      <BreadcrumbItem>
+                        <BreadcrumbLink 
+                          onClick={resetToDrives} 
+                          className="cursor-pointer text-red-400 hover:text-red-300 font-medium text-sm"
+                        >
+                          🏠 Unidades
+                        </BreadcrumbLink>
+                      </BreadcrumbItem>
+                      <BreadcrumbSeparator />
+                      {stack.map((item, index) => (
+                        <React.Fragment key={`${item.id}-${index}`}>
+                          <BreadcrumbItem>
+                            {index === stack.length - 1 ? (
+                              <BreadcrumbPage className="text-white font-semibold text-sm break-words">
+                                {item.name}
+                              </BreadcrumbPage>
+                            ) : (
+                              <BreadcrumbLink 
+                                onClick={() => goBackTo(index)} 
+                                className="cursor-pointer text-red-400 hover:text-red-300 font-medium text-sm break-words"
+                              >
+                                {item.name}
+                              </BreadcrumbLink>
+                            )}
+                          </BreadcrumbItem>
+                          {index < stack.length - 1 && <BreadcrumbSeparator />}
+                        </React.Fragment>
+                      ))}
+                    </BreadcrumbList>
+                  </Breadcrumb>
+                </div>
               </div>
             </div>
           </div>
@@ -498,7 +502,7 @@ export default function DriveExplorer() {
                               </div>
                             </div>
                             <div className="flex-1 min-w-0">
-                              <h4 className="font-semibold text-white text-lg truncate">{file.name}</h4>
+                              <h4 className="font-semibold text-white text-lg break-words">{file.name}</h4>
                               <p className="text-sm text-gray-300">
                                 {file.mimeType.includes('folder') ? 'Carpeta' : 'Archivo'}
                               </p>
@@ -540,17 +544,17 @@ export default function DriveExplorer() {
                     className="bg-gray-800/50 backdrop-blur-sm rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-700 cursor-pointer group"
                     onClick={() => openDrive(drive.id, drive.name)}
                   >
-                    <div className="p-4">
-                      <div className="flex items-center gap-4">
-                        <div className="p-3 bg-gradient-to-br from-red-600 to-red-800 rounded-lg group-hover:from-red-700 group-hover:to-red-900 transition-all">
-                          <HardDrive className="h-6 w-6 text-white" />
+                    <div className="p-3 sm:p-4">
+                      <div className="flex items-center gap-3 sm:gap-4">
+                        <div className="p-2 sm:p-3 bg-gradient-to-br from-red-600 to-red-800 rounded-lg group-hover:from-red-700 group-hover:to-red-900 transition-all flex-shrink-0">
+                          <HardDrive className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <h4 className="font-bold text-white text-lg truncate">{drive.name}</h4>
-                          <p className="text-sm text-gray-300">Unidad Compartida</p>
+                          <h4 className="font-bold text-white text-base sm:text-lg break-words leading-tight">{drive.name}</h4>
+                          <p className="text-xs sm:text-sm text-gray-300">Unidad Compartida</p>
                         </div>
-                        <div className="flex items-center gap-3">
-                          <Badge className="bg-red-600 text-white border-red-500">
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          <Badge className="bg-red-600 text-white border-red-500 text-xs hidden sm:inline-flex">
                             💾 Unidad Compartida
                           </Badge>
                           <Button 
@@ -560,7 +564,7 @@ export default function DriveExplorer() {
                               e.stopPropagation();
                               openFolderInDrive(drive.id);
                             }}
-                            className="border-red-500 text-red-400 hover:bg-red-600/20"
+                            className="border-red-500 text-red-400 hover:bg-red-600/20 p-2"
                             title="Abrir en Google Drive"
                           >
                             <ExternalLink className="h-4 w-4" />
@@ -578,17 +582,17 @@ export default function DriveExplorer() {
                     className="bg-gray-800/50 backdrop-blur-sm rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-700 cursor-pointer group"
                     onClick={() => openFolder(folder.id, folder.name)}
                   >
-                    <div className="p-4">
-                      <div className="flex items-center gap-4">
-                        <div className="p-3 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-lg group-hover:from-yellow-600 group-hover:to-orange-700 transition-all">
-                          <Folder className="h-6 w-6 text-white" />
+                    <div className="p-3 sm:p-4">
+                      <div className="flex items-center gap-3 sm:gap-4">
+                        <div className="p-2 sm:p-3 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-lg group-hover:from-yellow-600 group-hover:to-orange-700 transition-all flex-shrink-0">
+                          <Folder className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <h4 className="font-bold text-white text-lg truncate">{folder.name}</h4>
-                          <p className="text-sm text-gray-300">Carpeta</p>
+                          <h4 className="font-bold text-white text-base sm:text-lg break-words leading-tight">{folder.name}</h4>
+                          <p className="text-xs sm:text-sm text-gray-300">Carpeta</p>
                         </div>
-                        <div className="flex items-center gap-3">
-                          <Badge className="bg-orange-600 text-white border-orange-500">
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          <Badge className="bg-orange-600 text-white border-orange-500 text-xs hidden sm:inline-flex">
                             📁 Carpeta
                           </Badge>
                           <Button 
@@ -598,7 +602,7 @@ export default function DriveExplorer() {
                               e.stopPropagation();
                               openFolderInDrive(folder.id);
                             }}
-                            className="border-red-500 text-red-400 hover:bg-red-600/20"
+                            className="border-red-500 text-red-400 hover:bg-red-600/20 p-2"
                             title="Abrir en Google Drive"
                           >
                             <ExternalLink className="h-4 w-4" />
@@ -612,16 +616,16 @@ export default function DriveExplorer() {
                 {/* Archivos */}
                 {files.map(file => (
                   <div key={file.id} className="bg-gray-800/50 backdrop-blur-sm rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-700 group">
-                    <div className="p-4">
-                      <div className="flex items-center gap-4">
-                        <div className="p-3 bg-gradient-to-br from-gray-500 to-gray-700 rounded-lg group-hover:from-gray-600 group-hover:to-gray-800 transition-all">
+                    <div className="p-3 sm:p-4">
+                      <div className="flex items-center gap-3 sm:gap-4">
+                        <div className="p-2 sm:p-3 bg-gradient-to-br from-gray-500 to-gray-700 rounded-lg group-hover:from-gray-600 group-hover:to-gray-800 transition-all flex-shrink-0">
                           <div className="text-white">
                             {getFileIcon(file.mimeType)}
                           </div>
                         </div>
                         <div className="flex-1 min-w-0">
-                          <h4 className="font-bold text-white text-lg truncate">{file.name}</h4>
-                          <p className="text-sm text-gray-300">
+                          <h4 className="font-bold text-white text-base sm:text-lg break-words leading-tight">{file.name}</h4>
+                          <p className="text-xs sm:text-sm text-gray-300">
                             {file.mimeType.includes('image') ? 'Imagen' :
                              file.mimeType.includes('video') ? 'Video' :
                              file.mimeType.includes('audio') ? 'Audio' :
@@ -631,8 +635,8 @@ export default function DriveExplorer() {
                              'Archivo'}
                           </p>
                         </div>
-                        <div className="flex items-center gap-3">
-                          <Badge className={`${
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          <Badge className={`text-xs hidden sm:inline-flex ${
                             file.mimeType.includes('image') ? 'bg-pink-600 text-white border-pink-500' :
                             file.mimeType.includes('video') ? 'bg-red-600 text-white border-red-500' :
                             file.mimeType.includes('audio') ? 'bg-purple-600 text-white border-purple-500' :
