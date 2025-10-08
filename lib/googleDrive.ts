@@ -43,9 +43,7 @@ export class GoogleDriveService {
     const refreshToken = process.env.GOOGLE_REFRESH_TOKEN;
     const accessToken = process.env.GOOGLE_ACCESS_TOKEN;
 
-    console.log('🔍 Verificando tokens (server)...');
-    console.log('Has refresh token:', !!refreshToken);
-    console.log('Has access token:', !!accessToken);
+    // Tokens verificados
 
     if (!refreshToken && !accessToken) {
       console.error('❌ No se encontró refresh_token ni access_token en .env.local');
@@ -132,7 +130,7 @@ export class GoogleDriveService {
   async getFoldersInDrive(driveId: string): Promise<DriveFolder[]> {
     if (!this.drive) return [];
     try {
-      console.log('🔍 Getting root folders for drive:', driveId);
+      // Obteniendo carpetas raíz
       
       // Obtener SOLO las carpetas raíz del drive compartido
       const res = await this.drive.files.list({
@@ -147,8 +145,6 @@ export class GoogleDriveService {
       });
       
       const rootFolders = res.data.files || [];
-      console.log('📁 Root folders from API:', rootFolders.length);
-      console.log('📂 Root folder names (before sorting):', rootFolders.map((f: DriveFolder) => f.name));
       
       // Ordenamiento numérico inteligente
       const sortedFolders = rootFolders.sort((a: DriveFolder, b: DriveFolder) => {
@@ -176,7 +172,7 @@ export class GoogleDriveService {
         }
       });
       
-      console.log('📂 Root folder names (after sorting):', sortedFolders.map((f: DriveFolder) => f.name));
+      // Carpetas ordenadas
       
       return sortedFolders;
     } catch (err) {
@@ -239,15 +235,11 @@ export class GoogleDriveService {
   async searchFiles(q: string, driveId?: string): Promise<DriveFile[]> {
     if (!this.drive) return [];
     try {
-      console.log('🔍 Searching for:', q, 'in drive:', driveId);
-      
       // Escapar caracteres especiales para la query de Google Drive
       const escapedQuery = q.replace(/['"]/g, "\\'");
       
       // Query que busca SOLO archivos (no carpetas ni unidades)
       const query = `name contains '${escapedQuery}' and trashed=false and mimeType != 'application/vnd.google-apps.folder'`;
-      
-      console.log('📝 Search query (files only):', query);
       
       const res = await this.drive.files.list({
         q: query,
@@ -260,8 +252,6 @@ export class GoogleDriveService {
       });
       
       const files = res.data.files || [];
-      console.log('📁 Files found by API:', files.length);
-      console.log('📂 Sample files:', files.slice(0, 3).map((f: DriveFile) => f.name));
       
       // Filtrar resultados para coincidencias más precisas - SOLO ARCHIVOS DE AUDIO
       const audioMimeTypes = [
@@ -293,8 +283,6 @@ export class GoogleDriveService {
         
         return exactMatch || noSpacesMatch || wordMatch;
       });
-      
-      console.log('📄 Filtered results:', filteredFiles.length);
       
       return filteredFiles;
     } catch (err) {

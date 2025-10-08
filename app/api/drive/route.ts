@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
     const driveId = url.searchParams.get('driveId') || undefined;
     const query = url.searchParams.get('query') || undefined;
 
-    console.log(`🔍 API Request: action=${action}, folderId=${folderId}, driveId=${driveId}, query=${query}`);
+    // API Request procesada
 
     switch (action) {
       case 'shared-drives': {

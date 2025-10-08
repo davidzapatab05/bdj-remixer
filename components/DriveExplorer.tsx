@@ -211,7 +211,7 @@ export default function DriveExplorer() {
   }
 
   async function openDrive(driveId: string, name: string) {
-    console.log('🚀 Opening drive:', driveId, name);
+    // Abriendo unidad
     
     // Limpiar completamente todos los estados
     setCurrentDrive({ id: driveId, name });
@@ -230,15 +230,10 @@ export default function DriveExplorer() {
     setError(null);
     setFiles([]);
     try {
-      console.log('🔍 Fetching folders for drive:', driveId);
-      
       const res = await fetch(`/api/drive?action=folders&driveId=${encodeURIComponent(driveId)}`);
       const json = await res.json();
       
-      console.log('📁 Folders API Response:', json);
-      
       const folders = json.folders || [];
-      console.log('📂 Folders found:', folders.length);
       
       setFolders(folders);
     } catch (err: unknown) {
@@ -254,7 +249,7 @@ export default function DriveExplorer() {
     const driveId = currentDrive?.id;
     if (!driveId) return;
     
-    console.log('📁 Opening folder:', folderId, name, 'in drive:', driveId);
+    // Abriendo carpeta
     
     // Limpiar completamente todos los estados
     setFolders([]);
@@ -278,23 +273,16 @@ export default function DriveExplorer() {
     setLoading(true);
     setError(null);
     try {
-      console.log('🔍 Fetching files for folder:', folderId, 'driveId:', driveId);
-      
       // Obtener tanto archivos como carpetas dentro de la carpeta
       const url = `/api/drive?action=files&folderId=${encodeURIComponent(folderId)}` + (driveId ? `&driveId=${encodeURIComponent(driveId)}` : '');
       const res = await fetch(url);
       const json = await res.json();
-      
-      console.log('📁 API Response:', json);
       
       const allItems = json.files || [];
       
       // Separar carpetas y archivos correctamente
       const folders = allItems.filter((item: DriveFile) => item.mimeType === 'application/vnd.google-apps.folder');
       const files = allItems.filter((item: DriveFile) => item.mimeType !== 'application/vnd.google-apps.folder');
-      
-      console.log('📂 Folders found:', folders.length);
-      console.log('📄 Files found:', files.length);
       
       // Establecer los datos directamente
       setFolders(folders);
