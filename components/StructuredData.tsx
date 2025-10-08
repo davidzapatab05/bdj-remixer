@@ -4,16 +4,31 @@ import Script from 'next/script';
 export default function StructuredData() {
   const structuredData = {
     "@context": "https://schema.org",
-    "@type": "WebApplication",
+    "@type": "MusicGroup",
     "name": "BDJ Remixer",
-    "description": "Accede a unidades compartidas de Google Drive sin necesidad de login. Explora archivos, carpetas y contenido de BDJ Remixer de forma segura y rápida.",
+    "description": "Descarga música exclusiva para DJs: remixes, pistas, beats y sets. BDJ Remixer ofrece la mejor colección de música electrónica, reggaeton, trap y más para profesionales del DJ.",
     "url": process.env.BASE_URL || 'http://localhost:3000',
-    "applicationCategory": "WebApplication",
-    "operatingSystem": "Web Browser",
+    "genre": [
+      "Electronic Music",
+      "Reggaeton",
+      "Trap",
+      "Dance Music",
+      "Club Music",
+      "Party Music"
+    ],
+    "sameAs": [
+      "https://www.tiktok.com/@bdjremixeroficial"
+    ],
     "offers": {
       "@type": "Offer",
+      "itemOffered": {
+        "@type": "MusicAlbum",
+        "name": "BDJ Remixer - Colección de Música para DJs",
+        "description": "Remixes exclusivos, pistas DJ, beats y sets para profesionales"
+      },
       "price": "0",
-      "priceCurrency": "USD"
+      "priceCurrency": "USD",
+      "availability": "https://schema.org/InStock"
     },
     "creator": {
       "@type": "Organization",
@@ -24,11 +39,16 @@ export default function StructuredData() {
       ]
     },
     "featureList": [
-      "Acceso sin login a Google Drive",
-      "Navegación por carpetas",
-      "Búsqueda en tiempo real",
-      "Interfaz responsiva",
-      "Integración con WhatsApp"
+      "Música exclusiva para DJs",
+      "Remixes originales",
+      "Pistas de alta calidad",
+      "Beats profesionales",
+      "Sets DJ completos",
+      "Música electrónica",
+      "Reggaeton remix",
+      "Trap beats",
+      "Música club",
+      "Pistas de baile"
     ],
     "screenshot": {
       "@type": "ImageObject",
@@ -41,7 +61,8 @@ export default function StructuredData() {
       "telephone": "+51-945-227-780",
       "contactType": "customer service",
       "availableLanguage": "Spanish"
-    }
+    },
+    "keywords": "música DJ, remixes, beats, música electrónica, reggaeton, trap, club music, party music, DJ music, electronic music"
   };
 
   return (
