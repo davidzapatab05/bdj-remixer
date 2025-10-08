@@ -69,6 +69,7 @@ export default function DriveExplorer() {
       
       const res = await fetch(`/api/drive?action=search&query=${encodeURIComponent(query)}${driveId ? `&driveId=${encodeURIComponent(driveId)}` : ''}`);
       const json = await res.json();
+      
       const results = json.files || [];
       
       // Guardar en caché
@@ -267,25 +268,21 @@ export default function DriveExplorer() {
 
   function openFileInDrive(file: DriveFile) {
     try {
-      if (file.webViewLink) {
-        window.open(file.webViewLink, '_blank', 'noopener,noreferrer');
-      } else {
-        // Build direct view URL
-        const url = `https://drive.google.com/file/d/${file.id}/view`;
-        window.open(url, '_blank', 'noopener,noreferrer');
-      }
+      // Usar URL de solo visualización (preview) que no permite descarga
+      const url = `https://drive.google.com/file/d/${file.id}/preview`;
+      window.open(url, '_blank', 'noopener,noreferrer');
     } catch (error) {
       console.error('Error opening file in Drive:', error);
       // Fallback URL
-      const url = `https://drive.google.com/file/d/${file.id}/view`;
+      const url = `https://drive.google.com/file/d/${file.id}/preview`;
       window.open(url, '_blank', 'noopener,noreferrer');
     }
   }
 
   function openFolderInDrive(folderId: string) {
     try {
-      // Build correct folder URL for Google Drive
-      const url = `https://drive.google.com/drive/folders/${folderId}`;
+      // Usar URL que abre en modo de solo visualización
+      const url = `https://drive.google.com/drive/folders/${folderId}?usp=sharing`;
       window.open(url, '_blank', 'noopener,noreferrer');
     } catch (error) {
       console.error('Error opening folder in Drive:', error);
@@ -360,6 +357,7 @@ export default function DriveExplorer() {
       {/* Contenido Principal */}
       <div className="flex-1">
         <div className="max-w-7xl mx-auto p-3 sm:p-6 relative z-10">
+        
 
         {/* Navegación - Solo se muestra cuando hay breadcrumbs */}
         {stack.length > 0 && (
@@ -520,7 +518,7 @@ export default function DriveExplorer() {
                                 variant="outline"
                                 onClick={() => openFileInDrive(file)}
                                 className="border-red-500 text-red-400 hover:bg-red-600/20"
-                                title="Abrir en Google Drive"
+                                title="Ver en Google Drive (solo visualización)"
                               >
                                 <ExternalLink className="h-4 w-4" />
                               </Button>
@@ -565,7 +563,7 @@ export default function DriveExplorer() {
                               openFolderInDrive(drive.id);
                             }}
                             className="border-red-500 text-red-400 hover:bg-red-600/20 p-2"
-                            title="Abrir en Google Drive"
+                            title="Ver en Google Drive (solo visualización)"
                           >
                             <ExternalLink className="h-4 w-4" />
                           </Button>
@@ -603,7 +601,7 @@ export default function DriveExplorer() {
                               openFolderInDrive(folder.id);
                             }}
                             className="border-red-500 text-red-400 hover:bg-red-600/20 p-2"
-                            title="Abrir en Google Drive"
+                            title="Ver en Google Drive (solo visualización)"
                           >
                             <ExternalLink className="h-4 w-4" />
                           </Button>
@@ -658,7 +656,7 @@ export default function DriveExplorer() {
                             variant="outline"
                             onClick={() => openFileInDrive(file)}
                             className="border-red-500 text-red-400 hover:bg-red-600/20"
-                            title="Abrir en Google Drive"
+                            title="Ver en Google Drive (solo visualización)"
                           >
                             <ExternalLink className="h-4 w-4" />
                           </Button>

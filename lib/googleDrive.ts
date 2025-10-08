@@ -61,6 +61,43 @@ export class GoogleDriveService {
     this.drive = google.drive({ version: 'v3', auth: this.oauth2Client });
   }
 
+  // Verificar si el usuario actual tiene acceso a un drive compartido
+  async checkUserAccess(driveId: string, userEmail?: string): Promise<boolean> {
+    if (!this.drive) return false;
+    
+    try {
+      // Intentar acceder al drive compartido
+      const res = await this.drive.drives.get({
+        driveId: driveId,
+        fields: 'id,name,capabilities'
+      });
+      
+      // Si llegamos aquí, el usuario tiene acceso
+      return true;
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      console.log('🔒 Usuario sin acceso al drive:', errorMessage);
+      return false;
+    }
+  }
+
+  // Verificar permisos de un archivo específico
+  async checkFileAccess(fileId: string): Promise<boolean> {
+    if (!this.drive) return false;
+    
+    try {
+      const res = await this.drive.files.get({
+        fileId: fileId,
+        fields: 'id,name,permissions'
+      });
+      return true;
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      console.log('🔒 Usuario sin acceso al archivo:', errorMessage);
+      return false;
+    }
+  }
+
   // Shared Drives
   async getSharedDrives(): Promise<SharedDrive[]> {
     if (!this.drive) return [];

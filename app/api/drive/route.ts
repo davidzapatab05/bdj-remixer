@@ -21,6 +21,8 @@ export async function GET(request: NextRequest) {
         if (!driveId) {
           return NextResponse.json({ error: 'driveId is required for folders' }, { status: 400 });
         }
+        
+        // Mostrar carpetas siempre - la verificación de permisos se hace al hacer clic
         const folders = await googleDriveService.getFoldersInDrive(driveId);
         return NextResponse.json({ folders });
       }
@@ -29,6 +31,8 @@ export async function GET(request: NextRequest) {
         if (!folderId) {
           return NextResponse.json({ error: 'folderId is required for files' }, { status: 400 });
         }
+        
+        // Mostrar archivos siempre - la verificación de permisos se hace al hacer clic
         const files = await googleDriveService.getFilesInFolder(folderId, driveId);
         return NextResponse.json({ files });
       }
@@ -37,6 +41,8 @@ export async function GET(request: NextRequest) {
         if (!query) {
           return NextResponse.json({ error: 'query is required' }, { status: 400 });
         }
+        
+        // Mostrar resultados de búsqueda siempre - la verificación de permisos se hace al hacer clic
         const results = await googleDriveService.searchFiles(query, driveId);
         return NextResponse.json({ files: results });
       }
