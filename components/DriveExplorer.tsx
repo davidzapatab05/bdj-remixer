@@ -412,7 +412,7 @@ export default function DriveExplorer() {
                           onClick={resetToDrives} 
                           className="cursor-pointer text-red-400 hover:text-red-300 font-medium text-sm"
                         >
-                          🏠 Unidades
+                          💾 Unidades
                         </BreadcrumbLink>
                       </BreadcrumbItem>
                       <BreadcrumbSeparator />
