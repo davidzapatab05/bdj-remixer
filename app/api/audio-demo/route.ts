@@ -55,7 +55,7 @@ export async function GET(request: NextRequest) {
     const contentType = getContentType(fileInfo.mimeType);
     const fileName = fileInfo.name;
 
-    return new NextResponse(fileBuffer as ArrayBuffer, {
+    return new NextResponse(fileBuffer.buffer, {
       status: 200,
       headers: {
         'Content-Type': contentType,
