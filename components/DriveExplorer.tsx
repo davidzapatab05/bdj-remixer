@@ -313,19 +313,19 @@ export default function DriveExplorer() {
           <div className="absolute top-16 left-1/2 w-2 h-2 bg-orange-500 rounded-full animate-pulse opacity-50"></div>
           <div className="absolute top-6 right-8 w-1 h-1 bg-yellow-500 rounded-full animate-bounce opacity-90"></div>
         </div>
-        <div className="max-w-7xl mx-auto px-3 sm:px-6 py-2 sm:py-3">
-          <div className="flex flex-col space-y-4 sm:space-y-0 sm:flex-row sm:items-center sm:justify-between">
+        <div className="max-w-7xl mx-auto px-2 sm:px-4 py-1 sm:py-2">
+          <div className="flex flex-col space-y-2 sm:space-y-0 sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
             {/* Logo BDJ Remixer */}
             <div className="flex items-center justify-center sm:justify-start">
               <img 
-                src="/LOGO.png" 
+                src="/LOGO_RECORTADO.png" 
                 alt="BDJ Remixer Logo" 
-                className="h-10 sm:h-12 md:h-14 lg:h-16 xl:h-18 2xl:h-20 w-auto object-contain"
+                className="h-6 sm:h-8 md:h-10 lg:h-12 xl:h-14 2xl:h-16 w-auto object-contain brightness-0 invert"
               />
             </div>
 
             {/* Barra de búsqueda central */}
-            <div className="relative w-full sm:flex-1 sm:max-w-2xl sm:mx-4">
+            <div className="relative w-full sm:flex-1 sm:max-w-2xl sm:mx-3">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <Input
