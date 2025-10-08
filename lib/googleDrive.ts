@@ -202,27 +202,50 @@ export class GoogleDriveService {
   async searchFiles(q: string, driveId?: string): Promise<DriveFile[]> {
     if (!this.drive) return [];
     try {
-      // Escapar caracteres especiales y crear query más flexible
+      console.log('🔍 Searching for:', q, 'in drive:', driveId);
+      
+      // Escapar caracteres especiales para la query de Google Drive
       const escapedQuery = q.replace(/['"]/g, "\\'");
       
-      // Búsqueda más amplia que incluye coincidencias parciales
-      const query = `(name contains '${escapedQuery}' or name contains '${escapedQuery.toLowerCase()}' or name contains '${escapedQuery.toUpperCase()}') and trashed=false`;
+      // Query simplificada que funciona mejor con Google Drive API
+      const query = `name contains '${escapedQuery}' and trashed=false`;
+      
+      console.log('📝 Search query:', query);
       
       const res = await this.drive.files.list({
         q: query,
         includeItemsFromAllDrives: true,
         supportsAllDrives: true,
-        driveId,
+        driveId: driveId,
+        corpora: driveId ? 'drive' : 'allDrives',
         fields: 'nextPageToken, files(id, name, mimeType, webViewLink, thumbnailLink, driveId, parents)',
         pageSize: 200,
       });
       
-      // Filtrar resultados para coincidencias más precisas
       const files = res.data.files || [];
-      return files.filter((file: DriveFile) => 
-        file.name.toLowerCase().includes(q.toLowerCase()) ||
-        file.name.toLowerCase().includes(q.toLowerCase().replace(/\s+/g, ''))
-      );
+      console.log('📁 Files found by API:', files.length);
+      console.log('📂 Sample files:', files.slice(0, 3).map((f: DriveFile) => f.name));
+      
+      // Filtrar resultados para coincidencias más precisas
+      const filteredFiles = files.filter((file: DriveFile) => {
+        const fileName = file.name.toLowerCase();
+        const searchTerm = q.toLowerCase();
+        
+        // Coincidencia exacta o parcial
+        const exactMatch = fileName.includes(searchTerm);
+        // Coincidencia sin espacios
+        const noSpacesMatch = fileName.includes(searchTerm.replace(/\s+/g, ''));
+        // Coincidencia por palabras individuales
+        const wordMatch = searchTerm.split(' ').every(word => 
+          word.length > 0 && fileName.includes(word)
+        );
+        
+        return exactMatch || noSpacesMatch || wordMatch;
+      });
+      
+      console.log('📄 Filtered results:', filteredFiles.length);
+      
+      return filteredFiles;
     } catch (err) {
       console.error('Error searchFiles:', err);
       return [];

@@ -48,6 +48,7 @@ export default function DriveExplorer() {
   const [searchResults, setSearchResults] = useState<DriveFile[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [isWhatsAppModalOpen, setIsWhatsAppModalOpen] = useState(false);
+  const [searchCache, setSearchCache] = useState<Map<string, DriveFile[]>>(new Map());
 
   useEffect(() => {
     fetchDrives();
@@ -56,18 +57,35 @@ export default function DriveExplorer() {
   const performSearch = useCallback(async (query: string) => {
     try {
       const driveId = currentDrive?.id;
+      const cacheKey = `${query.toLowerCase()}-${driveId || 'all'}`;
+      
+      // Verificar caché primero
+      if (searchCache.has(cacheKey)) {
+        const cachedResults = searchCache.get(cacheKey) || [];
+        setSearchResults(cachedResults);
+        setIsSearching(false);
+        return;
+      }
+      
       const res = await fetch(`/api/drive?action=search&query=${encodeURIComponent(query)}${driveId ? `&driveId=${encodeURIComponent(driveId)}` : ''}`);
       const json = await res.json();
-      setSearchResults(json.files || []);
+      const results = json.files || [];
+      
+      // Guardar en caché
+      setSearchCache(prev => new Map(prev).set(cacheKey, results));
+      
+      // Actualizar resultados y estado de búsqueda al mismo tiempo
+      setSearchResults(results);
+      setIsSearching(false);
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Error searching files';
       setError(errorMessage);
-    } finally {
+      setSearchResults([]);
       setIsSearching(false);
     }
-  }, [currentDrive?.id]);
+  }, [currentDrive?.id, searchCache]);
 
-  // Función de búsqueda con debounce
+  // Función de búsqueda con debounce optimizado
   const debouncedSearch = useCallback((query: string) => {
     const timeoutId = setTimeout(async () => {
       if (query.trim().length > 2) {
@@ -76,14 +94,15 @@ export default function DriveExplorer() {
         setSearchResults([]);
         setIsSearching(false);
       }
-    }, 300);
+    }, 200); // Reducido de 300ms a 200ms para mayor velocidad
     
     return () => clearTimeout(timeoutId);
   }, [performSearch]);
 
   useEffect(() => {
-    if (searchQuery) {
+    if (searchQuery && searchQuery.trim().length > 2) {
       setIsSearching(true);
+      setSearchResults([]); // Limpiar resultados anteriores inmediatamente
       debouncedSearch(searchQuery);
     } else {
       setSearchResults([]);
@@ -263,6 +282,16 @@ export default function DriveExplorer() {
     }
   }
 
+  function openFolderInDrive(folderId: string) {
+    try {
+      // Build correct folder URL for Google Drive
+      const url = `https://drive.google.com/drive/folders/${folderId}`;
+      window.open(url, '_blank', 'noopener,noreferrer');
+    } catch (error) {
+      console.error('Error opening folder in Drive:', error);
+    }
+  }
+
   function resetToDrives() {
     setCurrentDrive(null);
     setStack([]);
@@ -300,7 +329,10 @@ export default function DriveExplorer() {
                   className="pl-10 sm:pl-12 pr-10 sm:pr-12 py-2 sm:py-3 text-sm sm:text-lg bg-white/10 border border-blue-700 rounded-xl shadow-lg focus:bg-white/20 focus:ring-2 focus:ring-blue-400 text-white placeholder-gray-300 w-full"
                 />
                 {isSearching && (
-                  <Loader2 className="absolute right-3 sm:right-4 top-1/2 transform -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 animate-spin text-blue-400" />
+                  <div className="absolute right-3 sm:right-4 top-1/2 transform -translate-y-1/2 flex items-center gap-2">
+                    <Loader2 className="h-4 w-4 sm:h-5 sm:w-5 animate-spin text-blue-400" />
+                    <span className="text-blue-400 text-xs sm:text-sm font-medium">Buscando...</span>
+                  </div>
                 )}
               </div>
             </div>
@@ -417,10 +449,33 @@ export default function DriveExplorer() {
                     </Badge>
                   )}
                 </div>
-                {searchResults.length === 0 && !isSearching ? (
+                {isSearching ? (
+                  <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl shadow-lg p-12 text-center border border-gray-700">
+                    <div className="relative">
+                      <Loader2 className="h-16 w-16 mx-auto text-blue-400 mb-4 animate-spin" />
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="w-20 h-20 border-4 border-blue-200 border-t-blue-500 rounded-full animate-spin"></div>
+                      </div>
+                    </div>
+                    <p className="text-gray-300 text-lg font-semibold">Buscando...</p>
+                    <p className="text-gray-400 text-sm mt-2">Por favor espera mientras buscamos en tu Google Drive</p>
+                    
+                    {/* Barra de progreso animada */}
+                    <div className="mt-6 w-full bg-gray-700 rounded-full h-2">
+                      <div className="bg-gradient-to-r from-blue-500 to-blue-600 h-2 rounded-full animate-pulse" style={{width: '100%'}}></div>
+                    </div>
+                    
+                    <div className="mt-4 flex justify-center space-x-1">
+                      <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"></div>
+                      <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                      <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                    </div>
+                  </div>
+                ) : !isSearching && searchResults.length === 0 && searchQuery ? (
                   <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl shadow-lg p-12 text-center border border-gray-700">
                     <Search className="h-16 w-16 mx-auto text-gray-400 mb-4" />
                     <p className="text-gray-300 text-lg">No se encontraron resultados.</p>
+                    <p className="text-gray-400 text-sm mt-2">Intenta con otros términos de búsqueda</p>
                   </div>
                 ) : (
                   <div className="space-y-3">
@@ -494,7 +549,7 @@ export default function DriveExplorer() {
                             variant="outline"
                             onClick={(e) => {
                               e.stopPropagation();
-                              openFileInDrive({ id: drive.id, name: drive.name, mimeType: 'application/vnd.google-apps.folder' });
+                              openFolderInDrive(drive.id);
                             }}
                             className="border-blue-500 text-blue-400 hover:bg-blue-600/20"
                             title="Abrir en Google Drive"
@@ -532,7 +587,7 @@ export default function DriveExplorer() {
                             variant="outline"
                             onClick={(e) => {
                               e.stopPropagation();
-                              openFileInDrive({ id: folder.id, name: folder.name, mimeType: 'application/vnd.google-apps.folder' });
+                              openFolderInDrive(folder.id);
                             }}
                             className="border-blue-500 text-blue-400 hover:bg-blue-600/20"
                             title="Abrir en Google Drive"
