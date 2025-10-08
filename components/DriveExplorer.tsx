@@ -1,6 +1,7 @@
 // components/DriveExplorer.tsx
 'use client';
 import React, { useEffect, useState, useCallback, useRef } from 'react';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -21,15 +22,18 @@ import {
   HardDrive,
   FolderOpen,
   FileText,
-  Image,
+  Image as ImageIcon,
   Video,
   Music,
   Archive,
   Code,
   FileSpreadsheet,
   Presentation,
-  Loader2
+  Loader2,
+  Play
 } from 'lucide-react';
+import { useAudioDemo } from '@/hooks/useAudioDemo';
+import { FFmpegLoader } from './FFmpegLoader';
 import WhatsAppModal from '@/components/WhatsAppModal';
 
 type SharedDrive = { id: string; name: string };
@@ -50,7 +54,63 @@ export default function DriveExplorer() {
   const [isWhatsAppModalOpen, setIsWhatsAppModalOpen] = useState(false);
   const [searchCache, setSearchCache] = useState<Map<string, DriveFile[]>>(new Map());
   const [searchCompleted, setSearchCompleted] = useState(false);
+  const [generatingDemo, setGeneratingDemo] = useState<string | null>(null);
+  const [demoProgress, setDemoProgress] = useState<Map<string, number>>(new Map());
+  const [isAnyDemoGenerating, setIsAnyDemoGenerating] = useState(false);
+  
+  // Hook para generar demos con FFmpeg.wasm en el navegador
+  const { generateDemo, isGenerating, progress, error: demoError } = useAudioDemo();
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Sincronizar progreso del hook con el estado del componente
+  useEffect(() => {
+    if (generatingDemo && isGenerating) {
+      setDemoProgress(prev => {
+        const newMap = new Map(prev);
+        // Solo actualizar si el progreso es mayor al anterior (evitar resetear)
+        const currentProgress = newMap.get(generatingDemo) || 0;
+        if (progress >= currentProgress) {
+          newMap.set(generatingDemo, progress);
+        }
+        return newMap;
+      });
+    }
+  }, [progress, generatingDemo, isGenerating]);
+
+  // Animación suave del progreso
+  useEffect(() => {
+    if (generatingDemo && isGenerating) {
+      const interval = setInterval(() => {
+        setDemoProgress(prev => {
+          const newMap = new Map(prev);
+          const currentProgress = newMap.get(generatingDemo) || 0;
+          if (currentProgress < progress) {
+            // Incremento suave hacia el progreso real
+            const increment = Math.min(2, progress - currentProgress);
+            newMap.set(generatingDemo, currentProgress + increment);
+          }
+          return newMap;
+        });
+      }, 50); // Actualización cada 50ms para suavidad
+
+      return () => clearInterval(interval);
+    }
+  }, [progress, generatingDemo, isGenerating]);
+
+  // Limpiar progreso cuando termine la generación
+  useEffect(() => {
+    if (!isGenerating && generatingDemo) {
+      setTimeout(() => {
+        setGeneratingDemo(null);
+        setIsAnyDemoGenerating(false);
+        setDemoProgress(prev => {
+          const newMap = new Map(prev);
+          newMap.delete(generatingDemo);
+          return newMap;
+        });
+      }, 1000); // Pequeña pausa para mostrar 100%
+    }
+  }, [isGenerating, generatingDemo]);
 
   useEffect(() => {
     fetchDrives();
@@ -115,6 +175,9 @@ export default function DriveExplorer() {
     if (searchQuery && searchQuery.trim().length > 2) {
       setSearchResults([]); // Limpiar resultados anteriores inmediatamente
       setSearchCompleted(false);
+      // Limpiar progreso de demos cuando se hace nueva búsqueda
+      setDemoProgress(new Map());
+      setGeneratingDemo(null);
       debouncedSearch(searchQuery);
     } else {
       setSearchResults([]);
@@ -276,7 +339,7 @@ export default function DriveExplorer() {
   // Función para obtener el icono según el tipo de archivo
   function getFileIcon(mimeType: string) {
     if (mimeType.includes('folder')) return <Folder className="h-5 w-5" />;
-    if (mimeType.includes('image')) return <Image className="h-5 w-5" />;
+    if (mimeType.includes('image')) return <ImageIcon className="h-5 w-5" />;
     if (mimeType.includes('video')) return <Video className="h-5 w-5" />;
     if (mimeType.includes('audio')) return <Music className="h-5 w-5" />;
     if (mimeType.includes('zip') || mimeType.includes('rar') || mimeType.includes('7z')) return <Archive className="h-5 w-5" />;
@@ -298,6 +361,94 @@ export default function DriveExplorer() {
       const url = `https://drive.google.com/file/d/${file.id}/preview`;
       window.open(url, '_blank', 'noopener,noreferrer');
     }
+  }
+
+  async function generateAudioDemo(file: DriveFile) {
+    try {
+      console.log('🎵 Generating demo for:', file.name);
+      
+      // Verificar si ya hay un demo generándose (cualquier archivo)
+      if (isAnyDemoGenerating) {
+        alert('Ya se está generando un demo. Por favor espera a que termine antes de generar otro.');
+        return;
+      }
+      
+      // Activar loading para este archivo específico y bloquear otros demos
+      setGeneratingDemo(file.id);
+      setIsAnyDemoGenerating(true);
+      setDemoProgress(prev => new Map(prev).set(file.id, 0));
+      
+      // Usar el hook para generar demo con FFmpeg.wasm en el navegador
+      const driveId = currentDrive?.id;
+      await generateDemo(file.id, driveId);
+      
+    } catch (error) {
+      console.error('Error generating audio demo:', error);
+      
+      // Mostrar error del hook o error genérico
+      const errorMessage = demoError || (error instanceof Error ? error.message : 'Error desconocido');
+      
+      // Crear notificación temporal de error
+      const errorDiv = document.createElement('div');
+      errorDiv.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: #dc2626;
+        color: white;
+        padding: 12px 16px;
+        border-radius: 8px;
+        z-index: 9999;
+        font-family: system-ui;
+        font-size: 14px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      `;
+      errorDiv.textContent = `Error: ${errorMessage}`;
+      document.body.appendChild(errorDiv);
+
+      // Remover notificación después de 5 segundos
+      setTimeout(() => {
+        if (errorDiv.parentNode) {
+          errorDiv.parentNode.removeChild(errorDiv);
+        }
+      }, 5000);
+      
+      // Limpiar estados en caso de error
+      setGeneratingDemo(null);
+      setIsAnyDemoGenerating(false);
+      setDemoProgress(prev => {
+        const newMap = new Map(prev);
+        newMap.delete(file.id);
+        return newMap;
+      });
+    }
+  }
+
+  // Función para verificar si es un archivo de audio
+  function isAudioFile(mimeType: string, fileName?: string): boolean {
+    const audioMimeTypes = [
+      'audio/mpeg',
+      'audio/mp3',
+      'audio/wav',
+      'audio/m4a',
+      'audio/mp4',
+      'audio/aac',
+      'audio/ogg',
+      'audio/flac',
+      'audio/x-m4a',
+      'audio/x-wav'
+    ];
+    
+    // Verificar por MIME type
+    const isAudioMime = audioMimeTypes.includes(mimeType);
+    
+    // Verificar por extensión de archivo como fallback
+    const audioExtensions = ['.mp3', '.wav', '.m4a', '.aac', '.ogg', '.flac'];
+    const isAudioExtension = fileName ? audioExtensions.some(ext => 
+      fileName.toLowerCase().endsWith(ext)
+    ) : false;
+    
+    return isAudioMime || isAudioExtension;
   }
 
   function openFolderInDrive(folderId: string) {
@@ -322,7 +473,9 @@ export default function DriveExplorer() {
 
 
   return (
-    <div className="min-h-screen flex flex-col bg-black">
+    <FFmpegLoader>
+      {(ffmpeg, ffmpegLoaded, ffmpegError) => (
+        <div className="min-h-screen flex flex-col bg-black">
       {/* Header Principal */}
       <div className="bg-gradient-to-r from-red-900 to-black shadow-2xl border-b border-red-800 relative overflow-hidden">
         {/* Partículas naranjas/amarillas de fondo */}
@@ -338,12 +491,20 @@ export default function DriveExplorer() {
           <div className="flex flex-col space-y-2 sm:space-y-0 sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
             {/* Logo BDJ Remixer */}
             <div className="flex items-center justify-center sm:justify-start">
-              <img 
+              <Image 
                 src="/LOGO_RECORTADO.png" 
                 alt="BDJ Remixer Logo" 
+                width={512}
+                height={512}
+                priority
+                quality={100}
+                unoptimized={false}
                 className="h-6 sm:h-8 md:h-10 lg:h-12 xl:h-14 2xl:h-16 w-auto object-contain brightness-0 invert cursor-pointer hover:opacity-80 transition-opacity"
                 onClick={resetToDrives}
                 title="BDJ Remixer"
+                style={{
+                  imageRendering: 'crisp-edges'
+                }}
               />
             </div>
 
@@ -517,25 +678,74 @@ export default function DriveExplorer() {
                       <div key={file.id} className="bg-gray-800/50 backdrop-blur-sm rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-700 group">
                         <div className="p-4">
                           <div className="flex items-center gap-4">
-                            <div className="p-3 bg-red-600/20 rounded-lg group-hover:bg-red-600/30 transition-colors">
-                              <div className="text-red-400">
+                            {/* Icono consistente para todos los archivos */}
+                            <div className="p-3 bg-gradient-to-br from-gray-500 to-gray-700 rounded-lg group-hover:from-gray-600 group-hover:to-gray-800 transition-all flex-shrink-0">
+                              <div className="text-white">
                                 {getFileIcon(file.mimeType)}
                               </div>
                             </div>
                             <div className="flex-1 min-w-0">
-                              <h4 className="font-semibold text-white text-lg break-words">{file.name}</h4>
-                              <p className="text-sm text-gray-300">
-                                {file.mimeType.includes('folder') ? 'Carpeta' : 'Archivo'}
+                              <h4 className="font-bold text-white text-base sm:text-lg break-words leading-tight">{file.name}</h4>
+                              <p className="text-xs sm:text-sm text-gray-300">
+                                {file.mimeType.includes('image') ? 'Imagen' :
+                                 file.mimeType.includes('video') ? 'Video' :
+                                 file.mimeType.includes('audio') ? 'Audio' :
+                                 file.mimeType.includes('document') ? 'Documento' :
+                                 file.mimeType.includes('spreadsheet') ? 'Hoja de cálculo' :
+                                 file.mimeType.includes('presentation') ? 'Presentación' :
+                                 file.mimeType.includes('folder') ? 'Carpeta' :
+                                 'Archivo'}
                               </p>
                             </div>
-                            <div className="flex items-center gap-3">
-                              <Badge className={`${
-                                file.mimeType.includes('folder') 
-                                  ? 'bg-orange-600 text-white border-orange-500' 
-                                  : 'bg-gray-600 text-gray-200 border-gray-500'
+                            <div className="flex items-center gap-2 flex-shrink-0">
+                              <Badge className={`text-xs hidden sm:inline-flex ${
+                                file.mimeType.includes('image') ? 'bg-pink-600 text-white border-pink-500' :
+                                file.mimeType.includes('video') ? 'bg-red-600 text-white border-red-500' :
+                                file.mimeType.includes('audio') ? 'bg-purple-600 text-white border-purple-500' :
+                                file.mimeType.includes('document') ? 'bg-red-600 text-white border-red-500' :
+                                file.mimeType.includes('spreadsheet') ? 'bg-green-600 text-white border-green-500' :
+                                file.mimeType.includes('presentation') ? 'bg-orange-600 text-white border-orange-500' :
+                                file.mimeType.includes('folder') ? 'bg-orange-600 text-white border-orange-500' :
+                                'bg-gray-600 text-white border-gray-500'
                               }`}>
-                                {file.mimeType.includes('folder') ? '📁 Carpeta' : '📄 Archivo'}
+                                {file.mimeType.includes('image') ? '🖼️ Imagen' :
+                                 file.mimeType.includes('video') ? '🎥 Video' :
+                                 file.mimeType.includes('audio') ? '🎵 Audio' :
+                                 file.mimeType.includes('document') ? '📄 Documento' :
+                                 file.mimeType.includes('spreadsheet') ? '📊 Hoja de cálculo' :
+                                 file.mimeType.includes('presentation') ? '📋 Presentación' :
+                                 file.mimeType.includes('folder') ? '📁 Carpeta' :
+                                 '📄 Archivo'}
                               </Badge>
+                              
+                              {/* Botón de Demo para archivos de audio en búsqueda */}
+                              {!file.mimeType.includes('folder') && isAudioFile(file.mimeType, file.name) && (
+                                <Button 
+                                  size="sm" 
+                                  variant="outline"
+                                  onClick={() => generateAudioDemo(file)}
+                                  disabled={isAnyDemoGenerating || generatingDemo === file.id}
+                                  className="border-green-500 text-green-400 hover:bg-green-600/20 disabled:opacity-50"
+                                  title={
+                                    isAnyDemoGenerating && generatingDemo !== file.id 
+                                      ? "Espera a que termine el demo actual" 
+                                      : generatingDemo === file.id 
+                                        ? `Generando demo... ${Math.round(Math.min(demoProgress.get(file.id) || 0, 100))}%` 
+                                        : "Descargar Demo Seguro (1 min)"
+                                  }
+                                >
+                                  {generatingDemo === file.id ? (
+                                    <span className="text-xs font-bold text-green-400">
+                                      {Math.round(Math.min(demoProgress.get(file.id) || 0, 100))}%
+                                    </span>
+                                  ) : isAnyDemoGenerating ? (
+                                    <span className="text-xs text-green-400">⏳</span>
+                                  ) : (
+                                    <Play className="h-4 w-4" />
+                                  )}
+                                </Button>
+                              )}
+                              
                               <Button 
                                 size="sm" 
                                 variant="outline"
@@ -674,6 +884,35 @@ export default function DriveExplorer() {
                              file.mimeType.includes('presentation') ? '📋 Presentación' :
                              '📄 Archivo'}
                           </Badge>
+                          
+                          {/* Botón de Demo para archivos de audio */}
+                          {isAudioFile(file.mimeType, file.name) && (
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              onClick={() => generateAudioDemo(file)}
+                              disabled={isAnyDemoGenerating || generatingDemo === file.id}
+                              className="border-green-500 text-green-400 hover:bg-green-600/20 disabled:opacity-50"
+                              title={
+                                isAnyDemoGenerating && generatingDemo !== file.id 
+                                  ? "Espera a que termine el demo actual" 
+                                  : generatingDemo === file.id 
+                                    ? `Generando demo... ${Math.round(Math.min(demoProgress.get(file.id) || 0, 100))}%` 
+                                    : "Descargar Demo Seguro (1 min)"
+                              }
+                            >
+                              {generatingDemo === file.id ? (
+                                <span className="text-xs font-bold text-green-400">
+                                  {Math.round(Math.min(demoProgress.get(file.id) || 0, 100))}%
+                                </span>
+                              ) : isAnyDemoGenerating ? (
+                                <span className="text-xs text-green-400">⏳</span>
+                              ) : (
+                                <Play className="h-4 w-4" />
+                              )}
+                            </Button>
+                          )}
+                          
                           <Button 
                             size="sm" 
                             variant="outline"
@@ -723,11 +962,13 @@ export default function DriveExplorer() {
         </div>
       </footer>
 
-      {/* Modal de WhatsApp */}
-      <WhatsAppModal 
-        isOpen={isWhatsAppModalOpen} 
-        onClose={() => setIsWhatsAppModalOpen(false)} 
-      />
-    </div>
+          {/* Modal de WhatsApp */}
+          <WhatsAppModal 
+            isOpen={isWhatsAppModalOpen} 
+            onClose={() => setIsWhatsAppModalOpen(false)} 
+          />
+        </div>
+      )}
+    </FFmpegLoader>
   );
 }

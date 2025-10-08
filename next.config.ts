@@ -5,10 +5,8 @@ const nextConfig: NextConfig = {
   experimental: {
     optimizePackageImports: ['lucide-react'],
   },
-  
   // Configuración de imágenes para Google Drive
   images: {
-    domains: ['drive.google.com', 'lh3.googleusercontent.com'],
     remotePatterns: [
       {
         protocol: 'https',
@@ -21,6 +19,8 @@ const nextConfig: NextConfig = {
         pathname: '/**',
       },
     ],
+    // Configuración de calidades permitidas para Next.js 16+
+    qualities: [25, 50, 75, 100],
   },
 
   // Headers de seguridad

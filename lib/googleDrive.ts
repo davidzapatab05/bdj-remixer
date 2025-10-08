@@ -62,12 +62,12 @@ export class GoogleDriveService {
   }
 
   // Verificar si el usuario actual tiene acceso a un drive compartido
-  async checkUserAccess(driveId: string, userEmail?: string): Promise<boolean> {
+  async checkUserAccess(driveId: string): Promise<boolean> {
     if (!this.drive) return false;
     
     try {
       // Intentar acceder al drive compartido
-      const res = await this.drive.drives.get({
+      await this.drive.drives.get({
         driveId: driveId,
         fields: 'id,name,capabilities'
       });
@@ -86,7 +86,7 @@ export class GoogleDriveService {
     if (!this.drive) return false;
     
     try {
-      const res = await this.drive.files.get({
+      await this.drive.files.get({
         fileId: fileId,
         fields: 'id,name,permissions'
       });
@@ -286,6 +286,41 @@ export class GoogleDriveService {
     } catch (err) {
       console.error('Error searchFiles:', err);
       return [];
+    }
+  }
+
+  // Obtener información de un archivo específico
+  async getFileInfo(fileId: string): Promise<DriveFile | null> {
+    if (!this.drive) return null;
+    try {
+      const res = await this.drive.files.get({
+        fileId: fileId,
+        fields: 'id, name, mimeType, webViewLink, thumbnailLink, driveId, size',
+        supportsAllDrives: true,
+      });
+      return res.data as DriveFile;
+    } catch (err) {
+      console.error('Error getFileInfo:', err);
+      return null;
+    }
+  }
+
+  // Descargar un archivo específico
+  async downloadFile(fileId: string): Promise<Buffer | null> {
+    if (!this.drive) return null;
+    try {
+      const res = await this.drive.files.get({
+        fileId: fileId,
+        alt: 'media',
+        supportsAllDrives: true,
+      }, {
+        responseType: 'arraybuffer'
+      });
+      
+      return Buffer.from(res.data as ArrayBuffer);
+    } catch (err) {
+      console.error('Error downloadFile:', err);
+      return null;
     }
   }
 }
