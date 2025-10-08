@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { getFFmpeg, isFFmpegLoaded } from '@/lib/ffmpeg-simple';
+import { getFFmpeg } from '@/lib/ffmpeg-simple';
 
 interface UseAudioDemoReturn {
   generateDemo: (fileId: string, driveId?: string) => Promise<void>;

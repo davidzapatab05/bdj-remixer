@@ -474,7 +474,7 @@ export default function DriveExplorer() {
 
   return (
     <FFmpegLoader>
-      {(ffmpeg, ffmpegLoaded, ffmpegError) => (
+      {() => (
         <div className="min-h-screen flex flex-col bg-black">
       {/* Header Principal */}
       <div className="bg-gradient-to-r from-red-900 to-black shadow-2xl border-b border-red-800 relative overflow-hidden">

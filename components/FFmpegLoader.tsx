@@ -4,13 +4,13 @@ import { useEffect, useState } from 'react';
 import { getFFmpeg, isFFmpegLoaded } from '@/lib/ffmpeg-simple';
 
 interface FFmpegLoaderProps {
-  children: (ffmpeg: any, loaded: boolean, error: string | null) => React.ReactNode;
+  children: (ffmpeg: unknown, loaded: boolean, error: string | null) => React.ReactNode;
 }
 
 export function FFmpegLoader({ children }: FFmpegLoaderProps) {
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [ffmpeg, setFfmpeg] = useState<any>(null);
+  const [ffmpeg, setFfmpeg] = useState<unknown>(null);
 
   useEffect(() => {
     let mounted = true;

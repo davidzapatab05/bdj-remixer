@@ -1,7 +1,7 @@
 import { FFmpeg } from '@ffmpeg/ffmpeg';
 import { toBlobURL } from '@ffmpeg/util';
 
-// Cache global de FFmpeg
+// Cache global de FFmpeg para reutilizar entre descargas
 let ffmpegInstance: FFmpeg | null = null;
 let ffmpegLoaded = false;
 
@@ -23,7 +23,7 @@ export async function getFFmpeg(): Promise<FFmpeg> {
     `https://cdn.skypack.dev/@ffmpeg/core@${version}/dist/umd`
   ];
 
-  let loadConfig: any = {};
+  let loadConfig: Record<string, string> = {};
   let lastError: Error | null = null;
 
   // Intentar cargar desde diferentes CDNs con timeout

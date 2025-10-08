@@ -6,10 +6,5 @@
   },
   "env": {
     "NODE_OPTIONS": "--max-old-space-size=512"
-  },
-  "build": {
-    "env": {
-      "FFMPEG_CDN_URL": "@ffmpeg-cdn-url"
-    }
   }
 }
