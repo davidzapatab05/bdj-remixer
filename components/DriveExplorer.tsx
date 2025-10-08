@@ -1,0 +1,637 @@
+// components/DriveExplorer.tsx
+'use client';
+import React, { useEffect, useState, useCallback } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
+import { 
+  Breadcrumb, 
+  BreadcrumbItem, 
+  BreadcrumbLink, 
+  BreadcrumbList, 
+  BreadcrumbPage, 
+  BreadcrumbSeparator 
+} from '@/components/ui/breadcrumb';
+import { 
+  Search, 
+  ArrowLeft, 
+  Folder, 
+  ExternalLink,
+  HardDrive,
+  FolderOpen,
+  FileText,
+  Image,
+  Video,
+  Music,
+  Archive,
+  Code,
+  FileSpreadsheet,
+  Presentation,
+  Loader2
+} from 'lucide-react';
+import WhatsAppModal from '@/components/WhatsAppModal';
+
+type SharedDrive = { id: string; name: string };
+type DriveFolder = { id: string; name: string; driveId?: string };
+type DriveFile = { id: string; name: string; mimeType: string; webViewLink?: string; thumbnailLink?: string; driveId?: string };
+
+export default function DriveExplorer() {
+  const [drives, setDrives] = useState<SharedDrive[]>([]);
+  const [currentDrive, setCurrentDrive] = useState<SharedDrive | null>(null);
+  const [folders, setFolders] = useState<DriveFolder[]>([]);
+  const [files, setFiles] = useState<DriveFile[]>([]);
+  const [stack, setStack] = useState<Array<{ id: string; name: string; driveId?: string }>>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<DriveFile[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [isWhatsAppModalOpen, setIsWhatsAppModalOpen] = useState(false);
+
+  useEffect(() => {
+    fetchDrives();
+  }, []);
+
+  const performSearch = useCallback(async (query: string) => {
+    try {
+      const driveId = currentDrive?.id;
+      const res = await fetch(`/api/drive?action=search&query=${encodeURIComponent(query)}${driveId ? `&driveId=${encodeURIComponent(driveId)}` : ''}`);
+      const json = await res.json();
+      setSearchResults(json.files || []);
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Error searching files';
+      setError(errorMessage);
+    } finally {
+      setIsSearching(false);
+    }
+  }, [currentDrive?.id]);
+
+  // Función de búsqueda con debounce
+  const debouncedSearch = useCallback((query: string) => {
+    const timeoutId = setTimeout(async () => {
+      if (query.trim().length > 2) {
+        await performSearch(query.trim());
+      } else {
+        setSearchResults([]);
+        setIsSearching(false);
+      }
+    }, 300);
+    
+    return () => clearTimeout(timeoutId);
+  }, [performSearch]);
+
+  useEffect(() => {
+    if (searchQuery) {
+      setIsSearching(true);
+      debouncedSearch(searchQuery);
+    } else {
+      setSearchResults([]);
+      setIsSearching(false);
+    }
+  }, [searchQuery, debouncedSearch]);
+
+  async function fetchDrives() {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch('/api/drive?action=shared-drives');
+      const json = await res.json();
+      setDrives(json.sharedDrives || []);
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Error fetching drives';
+      setError(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function openDrive(driveId: string, name: string) {
+    console.log('🚀 Opening drive:', driveId, name);
+    
+    // Limpiar completamente todos los estados
+    setCurrentDrive({ id: driveId, name });
+    setStack([{ id: driveId, name, driveId }]);
+    setFolders([]);
+    setFiles([]);
+    setSearchResults([]);
+    setSearchQuery('');
+    setError(null);
+    
+    await fetchFolders(driveId);
+  }
+
+  async function fetchFolders(driveId: string) {
+    setLoading(true);
+    setError(null);
+    setFiles([]);
+    try {
+      console.log('🔍 Fetching folders for drive:', driveId);
+      
+      const res = await fetch(`/api/drive?action=folders&driveId=${encodeURIComponent(driveId)}`);
+      const json = await res.json();
+      
+      console.log('📁 Folders API Response:', json);
+      
+      const folders = json.folders || [];
+      console.log('📂 Folders found:', folders.length);
+      
+      setFolders(folders);
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Error fetching folders';
+      console.error('❌ Error fetching folders:', errorMessage);
+      setError(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function openFolder(folderId: string, name: string) {
+    const driveId = currentDrive?.id;
+    if (!driveId) return;
+    
+    console.log('📁 Opening folder:', folderId, name, 'in drive:', driveId);
+    
+    // Limpiar completamente todos los estados
+    setFolders([]);
+    setFiles([]);
+    setSearchResults([]);
+    setSearchQuery('');
+    setError(null);
+    
+    // Agregar al stack de navegación
+    setStack(prev => {
+      const exists = prev.some(item => item.id === folderId);
+      if (exists) return prev;
+      return [...prev, { id: folderId, name, driveId }];
+    });
+    
+    // Cargar contenido de la carpeta
+    await fetchFiles(folderId, driveId);
+  }
+
+  async function fetchFiles(folderId: string, driveId?: string) {
+    setLoading(true);
+    setError(null);
+    try {
+      console.log('🔍 Fetching files for folder:', folderId, 'driveId:', driveId);
+      
+      // Obtener tanto archivos como carpetas dentro de la carpeta
+      const url = `/api/drive?action=files&folderId=${encodeURIComponent(folderId)}` + (driveId ? `&driveId=${encodeURIComponent(driveId)}` : '');
+      const res = await fetch(url);
+      const json = await res.json();
+      
+      console.log('📁 API Response:', json);
+      
+      const allItems = json.files || [];
+      
+      // Separar carpetas y archivos correctamente
+      const folders = allItems.filter((item: DriveFile) => item.mimeType === 'application/vnd.google-apps.folder');
+      const files = allItems.filter((item: DriveFile) => item.mimeType !== 'application/vnd.google-apps.folder');
+      
+      console.log('📂 Folders found:', folders.length);
+      console.log('📄 Files found:', files.length);
+      
+      // Establecer los datos directamente
+      setFolders(folders);
+      setFiles(files);
+      
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Error fetching files';
+      console.error('❌ Error fetching files:', errorMessage);
+      setError(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function goBackTo(index: number) {
+    // index refers to stack position to go to (0 is drive root)
+    const target = stack[index];
+    if (!target) return;
+    
+    console.log('🔙 Going back to:', target.name, 'at index:', index);
+    
+    // Limpiar completamente todos los estados
+    setFolders([]);
+    setFiles([]);
+    setSearchResults([]);
+    setSearchQuery('');
+    setError(null);
+    
+    // truncate stack
+    const newStack = stack.slice(0, index + 1);
+    setStack(newStack);
+    
+    // If target is the drive root (index 0), load folders
+    if (index === 0) {
+      fetchFolders(target.id);
+    } else {
+      // Otherwise target is a folder: load its content
+      fetchFiles(target.id, target.driveId);
+    }
+  }
+
+  // Función para obtener el icono según el tipo de archivo
+  function getFileIcon(mimeType: string) {
+    if (mimeType.includes('folder')) return <Folder className="h-5 w-5" />;
+    if (mimeType.includes('image')) return <Image className="h-5 w-5" />;
+    if (mimeType.includes('video')) return <Video className="h-5 w-5" />;
+    if (mimeType.includes('audio')) return <Music className="h-5 w-5" />;
+    if (mimeType.includes('zip') || mimeType.includes('rar') || mimeType.includes('7z')) return <Archive className="h-5 w-5" />;
+    if (mimeType.includes('text') || mimeType.includes('javascript') || mimeType.includes('json')) return <Code className="h-5 w-5" />;
+    if (mimeType.includes('spreadsheet') || mimeType.includes('excel')) return <FileSpreadsheet className="h-5 w-5" />;
+    if (mimeType.includes('presentation') || mimeType.includes('powerpoint')) return <Presentation className="h-5 w-5" />;
+    return <FileText className="h-5 w-5" />;
+  }
+
+
+  function openFileInDrive(file: DriveFile) {
+    try {
+      if (file.webViewLink) {
+        window.open(file.webViewLink, '_blank', 'noopener,noreferrer');
+      } else {
+        // Build direct view URL
+        const url = `https://drive.google.com/file/d/${file.id}/view`;
+        window.open(url, '_blank', 'noopener,noreferrer');
+      }
+    } catch (error) {
+      console.error('Error opening file in Drive:', error);
+      // Fallback URL
+      const url = `https://drive.google.com/file/d/${file.id}/view`;
+      window.open(url, '_blank', 'noopener,noreferrer');
+    }
+  }
+
+  function resetToDrives() {
+    setCurrentDrive(null);
+    setStack([]);
+    setFolders([]);
+    setFiles([]);
+    setSearchQuery('');
+    setSearchResults([]);
+    fetchDrives();
+  }
+
+
+  return (
+    <div className="min-h-screen flex flex-col">
+      {/* Header Principal */}
+      <div className="bg-gradient-to-r from-blue-900 to-black shadow-2xl border-b border-blue-800">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-0.5 sm:py-1">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-6">
+            {/* Logo BDJ Remixer */}
+            <div className="flex items-center">
+              <img 
+                src="/LOGO.png" 
+                alt="BDJ Remixer Logo" 
+                className="h-8 sm:h-10 md:h-12 lg:h-16 xl:h-20 2xl:h-24 w-auto object-contain"
+              />
+            </div>
+
+            {/* Barra de búsqueda central */}
+            <div className="relative w-full sm:flex-1 max-w-2xl">
+              <div className="relative">
+                <Search className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
+                <Input
+                  placeholder="Buscar archivos, carpetas o unidades compartidas..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10 sm:pl-12 pr-10 sm:pr-12 py-2 sm:py-3 text-sm sm:text-lg bg-white/10 border border-blue-700 rounded-xl shadow-lg focus:bg-white/20 focus:ring-2 focus:ring-blue-400 text-white placeholder-gray-300 w-full"
+                />
+                {isSearching && (
+                  <Loader2 className="absolute right-3 sm:right-4 top-1/2 transform -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 animate-spin text-blue-400" />
+                )}
+              </div>
+            </div>
+
+            {/* Botón Comprar Acceso */}
+            <Button 
+              onClick={() => setIsWhatsAppModalOpen(true)}
+              className="bg-green-600 hover:bg-green-700 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-semibold shadow-lg text-sm sm:text-base whitespace-nowrap"
+            >
+              💬 <span className="hidden sm:inline">Comprar Acceso</span><span className="sm:hidden">Acceso</span>
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* Contenido Principal */}
+      <div className="flex-1">
+        <div className="max-w-7xl mx-auto p-4 sm:p-6 -mt-2 sm:-mt-4 relative z-10">
+
+        {/* Navegación - Solo se muestra cuando hay breadcrumbs */}
+        {stack.length > 0 && (
+          <div className="mb-8">
+            <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl shadow-lg p-4 border border-gray-700">
+              <div className="flex items-center gap-4">
+                {/* Botón de regresar */}
+                <Button 
+                  variant="outline"
+                  onClick={() => {
+                    if (stack.length > 1) {
+                      goBackTo(stack.length - 2);
+                    } else {
+                      resetToDrives();
+                    }
+                  }}
+                  className="flex items-center gap-2 bg-gray-700/50 hover:bg-gray-600/50 text-white border-gray-600"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  Regresar
+                </Button>
+                
+                {/* Breadcrumbs */}
+                <Breadcrumb>
+                  <BreadcrumbList>
+                    <BreadcrumbItem>
+                      <BreadcrumbLink 
+                        onClick={resetToDrives} 
+                        className="cursor-pointer text-blue-400 hover:text-blue-300 font-medium"
+                      >
+                        🏠 Unidades
+                      </BreadcrumbLink>
+                    </BreadcrumbItem>
+                    <BreadcrumbSeparator />
+                    {stack.map((item, index) => (
+                      <React.Fragment key={`${item.id}-${index}`}>
+                        <BreadcrumbItem>
+                          {index === stack.length - 1 ? (
+                            <BreadcrumbPage className="text-white font-semibold">{item.name}</BreadcrumbPage>
+                          ) : (
+                            <BreadcrumbLink 
+                              onClick={() => goBackTo(index)} 
+                              className="cursor-pointer text-blue-400 hover:text-blue-300 font-medium"
+                            >
+                              {item.name}
+                            </BreadcrumbLink>
+                          )}
+                        </BreadcrumbItem>
+                        {index < stack.length - 1 && <BreadcrumbSeparator />}
+                      </React.Fragment>
+                    ))}
+                  </BreadcrumbList>
+                </Breadcrumb>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Error State */}
+        {error && (
+          <div className="mb-6 bg-red-900/20 border border-red-700 rounded-xl p-4 backdrop-blur-sm">
+            <div className="text-red-300 font-medium">⚠️ Error: {error}</div>
+          </div>
+        )}
+
+        {/* Loading State */}
+        {loading && (
+          <div className="space-y-4">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className="bg-gray-800/50 backdrop-blur-sm rounded-xl shadow-lg p-4 border border-gray-700">
+                <div className="flex items-center gap-4">
+                  <Skeleton className="h-12 w-12 rounded-lg bg-gray-700" />
+                  <div className="flex-1">
+                    <Skeleton className="h-4 w-3/4 mb-2 bg-gray-700" />
+                    <Skeleton className="h-3 w-1/2 bg-gray-700" />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Vista Unificada - Lista Vertical */}
+        {!loading && (
+          <div>
+            {/* Resultados de búsqueda */}
+            {searchQuery && (
+              <div className="mb-8">
+                <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl shadow-lg p-6 border border-gray-700 mb-6">
+                  <h3 className="text-xl font-bold text-white mb-2">
+                    🔍 Resultados de búsqueda para &quot;{searchQuery}&quot;
+                  </h3>
+                  {searchResults.length > 0 && (
+                    <Badge className="bg-blue-600 text-white border-blue-500">
+                      {searchResults.length} resultado{searchResults.length !== 1 ? 's' : ''}
+                    </Badge>
+                  )}
+                </div>
+                {searchResults.length === 0 && !isSearching ? (
+                  <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl shadow-lg p-12 text-center border border-gray-700">
+                    <Search className="h-16 w-16 mx-auto text-gray-400 mb-4" />
+                    <p className="text-gray-300 text-lg">No se encontraron resultados.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {searchResults.map(file => (
+                      <div key={file.id} className="bg-gray-800/50 backdrop-blur-sm rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-700 group">
+                        <div className="p-4">
+                          <div className="flex items-center gap-4">
+                            <div className="p-3 bg-blue-600/20 rounded-lg group-hover:bg-blue-600/30 transition-colors">
+                              <div className="text-blue-400">
+                                {getFileIcon(file.mimeType)}
+                              </div>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <h4 className="font-semibold text-white text-lg truncate">{file.name}</h4>
+                              <p className="text-sm text-gray-300">
+                                {file.mimeType.includes('folder') ? 'Carpeta' : 'Archivo'}
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <Badge className={`${
+                                file.mimeType.includes('folder') 
+                                  ? 'bg-blue-600 text-white border-blue-500' 
+                                  : 'bg-gray-600 text-gray-200 border-gray-500'
+                              }`}>
+                                {file.mimeType.includes('folder') ? '📁 Carpeta' : '📄 Archivo'}
+                              </Badge>
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                onClick={() => openFileInDrive(file)}
+                                className="border-blue-500 text-blue-400 hover:bg-blue-600/20"
+                                title="Abrir en Google Drive"
+                              >
+                                <ExternalLink className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Contenido Principal - Lista Vertical */}
+            {!searchQuery && (
+              <div className="space-y-3">
+                {/* Unidades Compartidas */}
+                {!currentDrive && drives.map(drive => (
+                  <div 
+                    key={drive.id} 
+                    className="bg-gray-800/50 backdrop-blur-sm rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-700 cursor-pointer group"
+                    onClick={() => openDrive(drive.id, drive.name)}
+                  >
+                    <div className="p-4">
+                      <div className="flex items-center gap-4">
+                        <div className="p-3 bg-gradient-to-br from-blue-600 to-blue-800 rounded-lg group-hover:from-blue-700 group-hover:to-blue-900 transition-all">
+                          <HardDrive className="h-6 w-6 text-white" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-bold text-white text-lg truncate">{drive.name}</h4>
+                          <p className="text-sm text-gray-300">Unidad Compartida</p>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <Badge className="bg-blue-600 text-white border-blue-500">
+                            💾 Unidad Compartida
+                          </Badge>
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openFileInDrive({ id: drive.id, name: drive.name, mimeType: 'application/vnd.google-apps.folder' });
+                            }}
+                            className="border-blue-500 text-blue-400 hover:bg-blue-600/20"
+                            title="Abrir en Google Drive"
+                          >
+                            <ExternalLink className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+
+                {/* Carpetas */}
+                {folders.map(folder => (
+                  <div 
+                    key={folder.id} 
+                    className="bg-gray-800/50 backdrop-blur-sm rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-700 cursor-pointer group"
+                    onClick={() => openFolder(folder.id, folder.name)}
+                  >
+                    <div className="p-4">
+                      <div className="flex items-center gap-4">
+                        <div className="p-3 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-lg group-hover:from-yellow-600 group-hover:to-orange-700 transition-all">
+                          <Folder className="h-6 w-6 text-white" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-bold text-white text-lg truncate">{folder.name}</h4>
+                          <p className="text-sm text-gray-300">Carpeta</p>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <Badge className="bg-yellow-600 text-white border-yellow-500">
+                            📁 Carpeta
+                          </Badge>
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openFileInDrive({ id: folder.id, name: folder.name, mimeType: 'application/vnd.google-apps.folder' });
+                            }}
+                            className="border-blue-500 text-blue-400 hover:bg-blue-600/20"
+                            title="Abrir en Google Drive"
+                          >
+                            <ExternalLink className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+
+                {/* Archivos */}
+                {files.map(file => (
+                  <div key={file.id} className="bg-gray-800/50 backdrop-blur-sm rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-700 group">
+                    <div className="p-4">
+                      <div className="flex items-center gap-4">
+                        <div className="p-3 bg-gradient-to-br from-gray-500 to-gray-700 rounded-lg group-hover:from-gray-600 group-hover:to-gray-800 transition-all">
+                          <div className="text-white">
+                            {getFileIcon(file.mimeType)}
+                          </div>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-bold text-white text-lg truncate">{file.name}</h4>
+                          <p className="text-sm text-gray-300">
+                            {file.mimeType.includes('image') ? 'Imagen' :
+                             file.mimeType.includes('video') ? 'Video' :
+                             file.mimeType.includes('audio') ? 'Audio' :
+                             file.mimeType.includes('document') ? 'Documento' :
+                             file.mimeType.includes('spreadsheet') ? 'Hoja de cálculo' :
+                             file.mimeType.includes('presentation') ? 'Presentación' :
+                             'Archivo'}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <Badge className={`${
+                            file.mimeType.includes('image') ? 'bg-pink-600 text-white border-pink-500' :
+                            file.mimeType.includes('video') ? 'bg-red-600 text-white border-red-500' :
+                            file.mimeType.includes('audio') ? 'bg-purple-600 text-white border-purple-500' :
+                            file.mimeType.includes('document') ? 'bg-blue-600 text-white border-blue-500' :
+                            file.mimeType.includes('spreadsheet') ? 'bg-green-600 text-white border-green-500' :
+                            file.mimeType.includes('presentation') ? 'bg-orange-600 text-white border-orange-500' :
+                            'bg-gray-600 text-white border-gray-500'
+                          }`}>
+                            {file.mimeType.includes('image') ? '🖼️ Imagen' :
+                             file.mimeType.includes('video') ? '🎥 Video' :
+                             file.mimeType.includes('audio') ? '🎵 Audio' :
+                             file.mimeType.includes('document') ? '📄 Documento' :
+                             file.mimeType.includes('spreadsheet') ? '📊 Hoja de cálculo' :
+                             file.mimeType.includes('presentation') ? '📋 Presentación' :
+                             '📄 Archivo'}
+                          </Badge>
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => openFileInDrive(file)}
+                            className="border-blue-500 text-blue-400 hover:bg-blue-600/20"
+                            title="Abrir en Google Drive"
+                          >
+                            <ExternalLink className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+
+                {/* Estado vacío */}
+                {drives.length === 0 && folders.length === 0 && files.length === 0 && (
+                  <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl shadow-lg p-12 text-center border border-gray-700">
+                    <FolderOpen className="h-16 w-16 mx-auto text-gray-400 mb-4" />
+                    <p className="text-gray-300 text-lg">
+                      {!currentDrive ? 'No se encontraron unidades compartidas.' : 'Esta carpeta está vacía.'}
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+        </div>
+      </div>
+
+      {/* Footer simplificado */}
+      <footer className="bg-gray-900 border-t border-gray-700 mt-12">
+        <div className="max-w-7xl mx-auto px-6 py-8">
+          <div className="text-center">
+            <p className="text-gray-400 text-sm">
+              © {new Date().getFullYear()} BDJ Remixer. Todos los derechos reservados.
+            </p>
+          </div>
+        </div>
+      </footer>
+
+      {/* Modal de WhatsApp */}
+      <WhatsAppModal 
+        isOpen={isWhatsAppModalOpen} 
+        onClose={() => setIsWhatsAppModalOpen(false)} 
+      />
+    </div>
+  );
+}
