@@ -53,14 +53,14 @@ export async function GET(request: NextRequest) {
     // 🔒 SEGURIDAD: Solo servir el archivo original para procesamiento en cliente
     // El procesamiento FFmpeg se hace en el cliente para evitar errores de servidor
     const contentType = getContentType(fileInfo.mimeType);
-    const fileName = fileInfo.name;
+    const fileName = sanitizeFileName(fileInfo.name);
 
     return new NextResponse(new Uint8Array(fileBuffer), {
       status: 200,
       headers: {
         'Content-Type': contentType,
         'Content-Disposition': `attachment; filename="${fileName}"`,
-        'X-Original-Filename': fileInfo.name,
+        'X-Original-Filename': encodeURIComponent(fileInfo.name),
         'X-Processing-Required': 'true', // Indica que necesita procesamiento en cliente
       },
     });
@@ -82,4 +82,12 @@ function getContentType(mimeType: string): string {
   if (mimeType.includes('aac')) return 'audio/aac';
   if (mimeType.includes('ogg')) return 'audio/ogg';
   return 'audio/mpeg';
+}
+
+function sanitizeFileName(fileName: string): string {
+  // Remover caracteres problemáticos para headers HTTP
+  return fileName
+    .replace(/[^\w\s.-]/g, '_') // Reemplazar caracteres especiales con _
+    .replace(/\s+/g, '_') // Reemplazar espacios con _
+    .substring(0, 100); // Limitar longitud
 }

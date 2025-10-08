@@ -1,10 +1,10 @@
 {
   "functions": {
     "app/api/audio-demo/route.ts": {
-      "maxDuration": 30
+      "maxDuration": 60
     }
   },
   "env": {
-    "NODE_OPTIONS": "--max-old-space-size=512"
+    "NODE_OPTIONS": "--max-old-space-size=1024"
   }
 }
