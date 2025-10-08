@@ -1,6 +1,6 @@
 // components/DriveExplorer.tsx
 'use client';
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -49,6 +49,8 @@ export default function DriveExplorer() {
   const [isSearching, setIsSearching] = useState(false);
   const [isWhatsAppModalOpen, setIsWhatsAppModalOpen] = useState(false);
   const [searchCache, setSearchCache] = useState<Map<string, DriveFile[]>>(new Map());
+  const [searchCompleted, setSearchCompleted] = useState(false);
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     fetchDrives();
@@ -64,8 +66,12 @@ export default function DriveExplorer() {
         const cachedResults = searchCache.get(cacheKey) || [];
         setSearchResults(cachedResults);
         setIsSearching(false);
+        setSearchCompleted(true);
         return;
       }
+      
+      setIsSearching(true);
+      setSearchCompleted(false);
       
       const res = await fetch(`/api/drive?action=search&query=${encodeURIComponent(query)}${driveId ? `&driveId=${encodeURIComponent(driveId)}` : ''}`);
       const json = await res.json();
@@ -78,38 +84,53 @@ export default function DriveExplorer() {
       // Actualizar resultados y estado de búsqueda al mismo tiempo
       setSearchResults(results);
       setIsSearching(false);
+      setSearchCompleted(true);
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Error searching files';
       setError(errorMessage);
       setSearchResults([]);
       setIsSearching(false);
+      setSearchCompleted(true);
     }
   }, [currentDrive?.id, searchCache]);
 
   // Función de búsqueda con debounce optimizado
   const debouncedSearch = useCallback((query: string) => {
-    const timeoutId = setTimeout(async () => {
+    // Limpiar timeout anterior si existe
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+    
+    searchTimeoutRef.current = setTimeout(async () => {
       if (query.trim().length > 2) {
         await performSearch(query.trim());
       } else {
         setSearchResults([]);
         setIsSearching(false);
       }
-    }, 200); // Reducido de 300ms a 200ms para mayor velocidad
-    
-    return () => clearTimeout(timeoutId);
+    }, 500); // 500ms de delay para evitar búsquedas excesivas
   }, [performSearch]);
 
   useEffect(() => {
     if (searchQuery && searchQuery.trim().length > 2) {
-      setIsSearching(true);
       setSearchResults([]); // Limpiar resultados anteriores inmediatamente
+      setSearchCompleted(false);
       debouncedSearch(searchQuery);
     } else {
       setSearchResults([]);
       setIsSearching(false);
+      setSearchCompleted(false);
     }
   }, [searchQuery, debouncedSearch]);
+
+  // Limpiar timeout al desmontar
+  useEffect(() => {
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+    };
+  }, []);
 
   async function fetchDrives() {
     setLoading(true);
@@ -320,7 +341,9 @@ export default function DriveExplorer() {
               <img 
                 src="/LOGO_RECORTADO.png" 
                 alt="BDJ Remixer Logo" 
-                className="h-6 sm:h-8 md:h-10 lg:h-12 xl:h-14 2xl:h-16 w-auto object-contain brightness-0 invert"
+                className="h-6 sm:h-8 md:h-10 lg:h-12 xl:h-14 2xl:h-16 w-auto object-contain brightness-0 invert cursor-pointer hover:opacity-80 transition-opacity"
+                onClick={resetToDrives}
+                title="BDJ Remixer"
               />
             </div>
 
@@ -336,7 +359,7 @@ export default function DriveExplorer() {
                 />
                 {isSearching && (
                   <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center gap-1">
-                    <Loader2 className="h-4 w-4 animate-spin text-red-400" />
+                    <div className="w-4 h-4 border-2 border-red-400 border-t-transparent rounded-full animate-spin"></div>
                     <span className="text-red-400 text-xs font-medium hidden sm:inline">Buscando...</span>
                   </div>
                 )}
@@ -482,7 +505,7 @@ export default function DriveExplorer() {
                       <div className="w-2 h-2 bg-red-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
                     </div>
                   </div>
-                ) : !isSearching && searchResults.length === 0 && searchQuery ? (
+                ) : !isSearching && searchCompleted && searchResults.length === 0 && searchQuery && searchQuery.trim().length > 2 ? (
                   <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl shadow-lg p-12 text-center border border-gray-700">
                     <Search className="h-16 w-16 mx-auto text-gray-400 mb-4" />
                     <p className="text-gray-300 text-lg">No se encontraron resultados.</p>
