@@ -57,9 +57,16 @@ export default function WhatsAppModal({ isOpen, onClose }: WhatsAppModalProps) {
 
   return (
     <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-gray-800 rounded-xl shadow-2xl max-w-md w-full border border-gray-700">
+      <div className="bg-black rounded-xl shadow-2xl max-w-md w-full border border-red-800 relative overflow-hidden">
+        {/* Partículas naranjas/amarillas de fondo */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-4 left-8 w-1 h-1 bg-orange-400 rounded-full animate-pulse opacity-60"></div>
+          <div className="absolute top-8 right-12 w-1.5 h-1.5 bg-yellow-400 rounded-full animate-bounce opacity-80"></div>
+          <div className="absolute top-12 left-1/4 w-1 h-1 bg-orange-300 rounded-full animate-pulse opacity-70"></div>
+          <div className="absolute top-6 right-1/3 w-1.5 h-1.5 bg-yellow-300 rounded-full animate-bounce opacity-60"></div>
+        </div>
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-700">
+        <div className="flex items-center justify-between p-6 border-b border-red-800 relative z-10">
           <h2 className="text-xl font-bold text-white">💬 Comprar Acceso</h2>
           <Button
             onClick={onClose}
@@ -72,8 +79,8 @@ export default function WhatsAppModal({ isOpen, onClose }: WhatsAppModalProps) {
         </div>
 
         {/* Content */}
-        <div className="p-6">
-          <p className="text-gray-300 mb-6 text-center">
+        <div className="p-6 relative z-10">
+          <p className="text-white mb-6 text-center">
             Selecciona un número de WhatsApp para contactarnos:
           </p>
 
@@ -82,7 +89,7 @@ export default function WhatsAppModal({ isOpen, onClose }: WhatsAppModalProps) {
               <Button
                 key={contact.id}
                 onClick={() => handleWhatsAppClick(contact.number)}
-                className="w-full bg-green-600 hover:bg-green-700 text-white py-3 px-4 rounded-lg font-semibold shadow-lg transition-all duration-200 hover:scale-105"
+                className="w-full bg-red-600 hover:bg-red-700 text-white py-3 px-4 rounded-lg font-semibold shadow-lg transition-all duration-200 hover:scale-105"
               >
                 <div className="flex items-center justify-center gap-3">
                   <span className="text-lg">💬</span>
@@ -95,8 +102,8 @@ export default function WhatsAppModal({ isOpen, onClose }: WhatsAppModalProps) {
             ))}
           </div>
 
-          <div className="mt-6 p-4 bg-blue-900/20 rounded-lg border border-blue-700">
-            <p className="text-sm text-blue-200 text-center">
+          <div className="mt-6 p-4 bg-red-900/20 rounded-lg border border-red-700">
+            <p className="text-sm text-red-200 text-center">
               📱 Todos nuestros números están disponibles 24/7
             </p>
           </div>

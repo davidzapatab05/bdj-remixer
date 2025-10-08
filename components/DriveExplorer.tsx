@@ -304,9 +304,18 @@ export default function DriveExplorer() {
 
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-black">
       {/* Header Principal */}
-      <div className="bg-gradient-to-r from-blue-900 to-black shadow-2xl border-b border-blue-800">
+      <div className="bg-gradient-to-r from-red-900 to-black shadow-2xl border-b border-red-800 relative overflow-hidden">
+        {/* Partículas naranjas/amarillas de fondo */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-4 left-8 w-2 h-2 bg-orange-400 rounded-full animate-pulse opacity-60"></div>
+          <div className="absolute top-12 right-16 w-1 h-1 bg-yellow-400 rounded-full animate-bounce opacity-80"></div>
+          <div className="absolute top-20 left-1/4 w-1.5 h-1.5 bg-orange-300 rounded-full animate-pulse opacity-70"></div>
+          <div className="absolute top-8 right-1/3 w-1 h-1 bg-yellow-300 rounded-full animate-bounce opacity-60"></div>
+          <div className="absolute top-16 left-1/2 w-2 h-2 bg-orange-500 rounded-full animate-pulse opacity-50"></div>
+          <div className="absolute top-6 right-8 w-1 h-1 bg-yellow-500 rounded-full animate-bounce opacity-90"></div>
+        </div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-0.5 sm:py-1">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-6">
             {/* Logo BDJ Remixer */}
@@ -326,12 +335,12 @@ export default function DriveExplorer() {
                   placeholder="Buscar archivos, carpetas o unidades compartidas..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 sm:pl-12 pr-10 sm:pr-12 py-2 sm:py-3 text-sm sm:text-lg bg-white/10 border border-blue-700 rounded-xl shadow-lg focus:bg-white/20 focus:ring-2 focus:ring-blue-400 text-white placeholder-gray-300 w-full"
+                  className="pl-10 sm:pl-12 pr-10 sm:pr-12 py-2 sm:py-3 text-sm sm:text-lg bg-white/10 border border-red-700 rounded-xl shadow-lg focus:bg-white/20 focus:ring-2 focus:ring-red-400 text-white placeholder-gray-300 w-full"
                 />
                 {isSearching && (
                   <div className="absolute right-3 sm:right-4 top-1/2 transform -translate-y-1/2 flex items-center gap-2">
-                    <Loader2 className="h-4 w-4 sm:h-5 sm:w-5 animate-spin text-blue-400" />
-                    <span className="text-blue-400 text-xs sm:text-sm font-medium">Buscando...</span>
+                    <Loader2 className="h-4 w-4 sm:h-5 sm:w-5 animate-spin text-red-400" />
+                    <span className="text-red-400 text-xs sm:text-sm font-medium">Buscando...</span>
                   </div>
                 )}
               </div>
@@ -340,7 +349,7 @@ export default function DriveExplorer() {
             {/* Botón Comprar Acceso */}
             <Button 
               onClick={() => setIsWhatsAppModalOpen(true)}
-              className="bg-green-600 hover:bg-green-700 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-semibold shadow-lg text-sm sm:text-base whitespace-nowrap"
+              className="bg-red-600 hover:bg-red-700 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-semibold shadow-lg text-sm sm:text-base whitespace-nowrap"
             >
               💬 <span className="hidden sm:inline">Comprar Acceso</span><span className="sm:hidden">Acceso</span>
             </Button>
@@ -379,7 +388,7 @@ export default function DriveExplorer() {
                     <BreadcrumbItem>
                       <BreadcrumbLink 
                         onClick={resetToDrives} 
-                        className="cursor-pointer text-blue-400 hover:text-blue-300 font-medium"
+                        className="cursor-pointer text-red-400 hover:text-red-300 font-medium"
                       >
                         🏠 Unidades
                       </BreadcrumbLink>
@@ -393,7 +402,7 @@ export default function DriveExplorer() {
                           ) : (
                             <BreadcrumbLink 
                               onClick={() => goBackTo(index)} 
-                              className="cursor-pointer text-blue-400 hover:text-blue-300 font-medium"
+                              className="cursor-pointer text-red-400 hover:text-red-300 font-medium"
                             >
                               {item.name}
                             </BreadcrumbLink>
@@ -444,7 +453,7 @@ export default function DriveExplorer() {
                     🔍 Resultados de búsqueda para &quot;{searchQuery}&quot;
                   </h3>
                   {searchResults.length > 0 && (
-                    <Badge className="bg-blue-600 text-white border-blue-500">
+                    <Badge className="bg-red-600 text-white border-red-500">
                       {searchResults.length} resultado{searchResults.length !== 1 ? 's' : ''}
                     </Badge>
                   )}
@@ -452,9 +461,9 @@ export default function DriveExplorer() {
                 {isSearching ? (
                   <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl shadow-lg p-12 text-center border border-gray-700">
                     <div className="relative">
-                      <Loader2 className="h-16 w-16 mx-auto text-blue-400 mb-4 animate-spin" />
+                      <Loader2 className="h-16 w-16 mx-auto text-red-400 mb-4 animate-spin" />
                       <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="w-20 h-20 border-4 border-blue-200 border-t-blue-500 rounded-full animate-spin"></div>
+                        <div className="w-20 h-20 border-4 border-red-200 border-t-red-500 rounded-full animate-spin"></div>
                       </div>
                     </div>
                     <p className="text-gray-300 text-lg font-semibold">Buscando...</p>
@@ -462,13 +471,13 @@ export default function DriveExplorer() {
                     
                     {/* Barra de progreso animada */}
                     <div className="mt-6 w-full bg-gray-700 rounded-full h-2">
-                      <div className="bg-gradient-to-r from-blue-500 to-blue-600 h-2 rounded-full animate-pulse" style={{width: '100%'}}></div>
+                      <div className="bg-gradient-to-r from-red-500 to-red-600 h-2 rounded-full animate-pulse" style={{width: '100%'}}></div>
                     </div>
                     
                     <div className="mt-4 flex justify-center space-x-1">
-                      <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"></div>
-                      <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
-                      <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                      <div className="w-2 h-2 bg-red-400 rounded-full animate-bounce"></div>
+                      <div className="w-2 h-2 bg-red-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                      <div className="w-2 h-2 bg-red-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
                     </div>
                   </div>
                 ) : !isSearching && searchResults.length === 0 && searchQuery ? (
@@ -483,8 +492,8 @@ export default function DriveExplorer() {
                       <div key={file.id} className="bg-gray-800/50 backdrop-blur-sm rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-700 group">
                         <div className="p-4">
                           <div className="flex items-center gap-4">
-                            <div className="p-3 bg-blue-600/20 rounded-lg group-hover:bg-blue-600/30 transition-colors">
-                              <div className="text-blue-400">
+                            <div className="p-3 bg-red-600/20 rounded-lg group-hover:bg-red-600/30 transition-colors">
+                              <div className="text-red-400">
                                 {getFileIcon(file.mimeType)}
                               </div>
                             </div>
@@ -497,7 +506,7 @@ export default function DriveExplorer() {
                             <div className="flex items-center gap-3">
                               <Badge className={`${
                                 file.mimeType.includes('folder') 
-                                  ? 'bg-blue-600 text-white border-blue-500' 
+                                  ? 'bg-orange-600 text-white border-orange-500' 
                                   : 'bg-gray-600 text-gray-200 border-gray-500'
                               }`}>
                                 {file.mimeType.includes('folder') ? '📁 Carpeta' : '📄 Archivo'}
@@ -506,7 +515,7 @@ export default function DriveExplorer() {
                                 size="sm" 
                                 variant="outline"
                                 onClick={() => openFileInDrive(file)}
-                                className="border-blue-500 text-blue-400 hover:bg-blue-600/20"
+                                className="border-red-500 text-red-400 hover:bg-red-600/20"
                                 title="Abrir en Google Drive"
                               >
                                 <ExternalLink className="h-4 w-4" />
@@ -533,7 +542,7 @@ export default function DriveExplorer() {
                   >
                     <div className="p-4">
                       <div className="flex items-center gap-4">
-                        <div className="p-3 bg-gradient-to-br from-blue-600 to-blue-800 rounded-lg group-hover:from-blue-700 group-hover:to-blue-900 transition-all">
+                        <div className="p-3 bg-gradient-to-br from-red-600 to-red-800 rounded-lg group-hover:from-red-700 group-hover:to-red-900 transition-all">
                           <HardDrive className="h-6 w-6 text-white" />
                         </div>
                         <div className="flex-1 min-w-0">
@@ -541,7 +550,7 @@ export default function DriveExplorer() {
                           <p className="text-sm text-gray-300">Unidad Compartida</p>
                         </div>
                         <div className="flex items-center gap-3">
-                          <Badge className="bg-blue-600 text-white border-blue-500">
+                          <Badge className="bg-red-600 text-white border-red-500">
                             💾 Unidad Compartida
                           </Badge>
                           <Button 
@@ -551,7 +560,7 @@ export default function DriveExplorer() {
                               e.stopPropagation();
                               openFolderInDrive(drive.id);
                             }}
-                            className="border-blue-500 text-blue-400 hover:bg-blue-600/20"
+                            className="border-red-500 text-red-400 hover:bg-red-600/20"
                             title="Abrir en Google Drive"
                           >
                             <ExternalLink className="h-4 w-4" />
@@ -579,7 +588,7 @@ export default function DriveExplorer() {
                           <p className="text-sm text-gray-300">Carpeta</p>
                         </div>
                         <div className="flex items-center gap-3">
-                          <Badge className="bg-yellow-600 text-white border-yellow-500">
+                          <Badge className="bg-orange-600 text-white border-orange-500">
                             📁 Carpeta
                           </Badge>
                           <Button 
@@ -589,7 +598,7 @@ export default function DriveExplorer() {
                               e.stopPropagation();
                               openFolderInDrive(folder.id);
                             }}
-                            className="border-blue-500 text-blue-400 hover:bg-blue-600/20"
+                            className="border-red-500 text-red-400 hover:bg-red-600/20"
                             title="Abrir en Google Drive"
                           >
                             <ExternalLink className="h-4 w-4" />
@@ -627,7 +636,7 @@ export default function DriveExplorer() {
                             file.mimeType.includes('image') ? 'bg-pink-600 text-white border-pink-500' :
                             file.mimeType.includes('video') ? 'bg-red-600 text-white border-red-500' :
                             file.mimeType.includes('audio') ? 'bg-purple-600 text-white border-purple-500' :
-                            file.mimeType.includes('document') ? 'bg-blue-600 text-white border-blue-500' :
+                            file.mimeType.includes('document') ? 'bg-red-600 text-white border-red-500' :
                             file.mimeType.includes('spreadsheet') ? 'bg-green-600 text-white border-green-500' :
                             file.mimeType.includes('presentation') ? 'bg-orange-600 text-white border-orange-500' :
                             'bg-gray-600 text-white border-gray-500'
@@ -644,7 +653,7 @@ export default function DriveExplorer() {
                             size="sm" 
                             variant="outline"
                             onClick={() => openFileInDrive(file)}
-                            className="border-blue-500 text-blue-400 hover:bg-blue-600/20"
+                            className="border-red-500 text-red-400 hover:bg-red-600/20"
                             title="Abrir en Google Drive"
                           >
                             <ExternalLink className="h-4 w-4" />
@@ -672,10 +681,17 @@ export default function DriveExplorer() {
       </div>
 
       {/* Footer simplificado */}
-      <footer className="bg-gray-900 border-t border-gray-700 mt-12">
-        <div className="max-w-7xl mx-auto px-6 py-8">
+      <footer className="bg-black border-t border-red-800 mt-12 relative overflow-hidden">
+        {/* Partículas naranjas/amarillas de fondo */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-2 left-8 w-1 h-1 bg-orange-400 rounded-full animate-pulse opacity-40"></div>
+          <div className="absolute top-4 right-16 w-1.5 h-1.5 bg-yellow-400 rounded-full animate-bounce opacity-60"></div>
+          <div className="absolute top-6 left-1/4 w-1 h-1 bg-orange-300 rounded-full animate-pulse opacity-50"></div>
+          <div className="absolute top-3 right-1/3 w-1.5 h-1.5 bg-yellow-300 rounded-full animate-bounce opacity-40"></div>
+        </div>
+        <div className="max-w-7xl mx-auto px-6 py-8 relative z-10">
           <div className="text-center">
-            <p className="text-gray-400 text-sm">
+            <p className="text-white text-sm font-medium">
               © {new Date().getFullYear()} BDJ Remixer. Todos los derechos reservados.
             </p>
           </div>
