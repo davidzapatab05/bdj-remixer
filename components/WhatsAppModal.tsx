@@ -28,6 +28,12 @@ const whatsappNumbers = [
     number: '51970776957',
     display: '+51 970 776 957',
     label: 'WhatsApp'
+  },
+  {
+    id: 4,
+    number: '51946447806',
+    display: '+51 946 447 806',
+    label: 'WhatsApp'
   }
 ];
 

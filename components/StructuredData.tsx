@@ -58,7 +58,7 @@ export default function StructuredData() {
     },
     "contactPoint": {
       "@type": "ContactPoint",
-      "telephone": "+51-945-227-780",
+      "telephone": "+51-945-270-604",
       "contactType": "customer service",
       "availableLanguage": "Spanish"
     },
