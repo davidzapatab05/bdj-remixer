@@ -32,6 +32,8 @@ export interface SharedDrive {
 export class GoogleDriveService {
   private drive: any; // eslint-disable-line @typescript-eslint/no-explicit-any
   private oauth2Client: any; // eslint-disable-line @typescript-eslint/no-explicit-any
+  private tokenRefreshAttempts = 0;
+  private maxRefreshAttempts = 3;
 
   constructor() {
     this.oauth2Client = new google.auth.OAuth2(
@@ -57,6 +59,38 @@ export class GoogleDriveService {
     });
 
     this.drive = google.drive({ version: 'v3', auth: this.oauth2Client });
+  }
+
+  // Método para renovar tokens automáticamente
+  private async refreshTokens(): Promise<boolean> {
+    if (this.tokenRefreshAttempts >= this.maxRefreshAttempts) {
+      console.log('🔄 Máximo de intentos de renovación alcanzado. Necesita renovación manual.');
+      return false;
+    }
+
+    try {
+      this.tokenRefreshAttempts++;
+      console.log(`🔄 Intentando renovar tokens (intento ${this.tokenRefreshAttempts}/${this.maxRefreshAttempts})`);
+      
+      const { credentials } = await this.oauth2Client.refreshAccessToken();
+      this.oauth2Client.setCredentials(credentials);
+      
+      console.log('✅ Tokens renovados exitosamente');
+      this.tokenRefreshAttempts = 0; // Reset counter on success
+      
+      // Aquí podrías guardar los nuevos tokens en una base de datos o archivo
+      // para persistencia entre reinicios de la aplicación
+      console.log('💾 Nuevos tokens obtenidos:', {
+        access_token: credentials.access_token ? '***' + credentials.access_token.slice(-4) : 'N/A',
+        refresh_token: credentials.refresh_token ? '***' + credentials.refresh_token.slice(-4) : 'N/A',
+        expiry_date: credentials.expiry_date
+      });
+      
+      return true;
+    } catch (error) {
+      console.error('❌ Error renovando tokens:', error);
+      return false;
+    }
   }
 
   // Verificar si el usuario actual tiene acceso a un drive compartido
@@ -108,20 +142,33 @@ export class GoogleDriveService {
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : String(err);
       console.error('Error getSharedDrives:', errorMessage);
-      // Try refresh token flow if possible
-      try {
-        if (this.oauth2Client && this.oauth2Client.refreshAccessToken) {
-          const { credentials } = await this.oauth2Client.refreshAccessToken();
-          this.oauth2Client.setCredentials(credentials);
-          const retry = await this.drive.drives.list({
-            pageSize: 100,
-            fields: 'nextPageToken, drives(id, name, themeId, colorRgb, backgroundImageLink, createdTime)',
-          });
-          return retry.data.drives || [];
+      
+      // Verificar si es error de token expirado
+      if (errorMessage.includes('invalid_grant') || errorMessage.includes('invalid_token')) {
+        console.log('🔄 Token expirado detectado. Intentando renovación automática...');
+        
+        // Intentar renovar tokens automáticamente
+        const refreshSuccess = await this.refreshTokens();
+        
+        if (refreshSuccess) {
+          console.log('🔄 Reintentando operación con tokens renovados...');
+          try {
+            const retry = await this.drive.drives.list({
+              pageSize: 100,
+              fields: 'nextPageToken, drives(id, name, themeId, colorRgb, backgroundImageLink, createdTime)',
+            });
+            return retry.data.drives || [];
+          } catch (retryErr) {
+            console.error('❌ Error después de renovar tokens:', retryErr);
+            return [];
+          }
+        } else {
+          console.log('❌ No se pudo renovar automáticamente. Necesita renovación manual.');
+          console.log('📝 Visita: /api/refresh-token para obtener nuevos tokens');
+          return [];
         }
-      } catch (refreshErr) {
-        console.error('Error refreshing token:', refreshErr);
       }
+      
       return [];
     }
   }
@@ -175,8 +222,39 @@ export class GoogleDriveService {
       // Carpetas ordenadas
       
       return sortedFolders;
-    } catch (err) {
-      console.error('Error getFoldersInDrive:', err);
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      console.error('Error getFoldersInDrive:', errorMessage);
+      
+      // Verificar si es error de token expirado
+      if (errorMessage.includes('invalid_grant') || errorMessage.includes('invalid_token')) {
+        console.log('🔄 Token expirado detectado. Intentando renovación automática...');
+        
+        const refreshSuccess = await this.refreshTokens();
+        
+        if (refreshSuccess) {
+          console.log('🔄 Reintentando operación con tokens renovados...');
+          try {
+            const retry = await this.drive.files.list({
+              q: "mimeType='application/vnd.google-apps.folder' and trashed=false and parents in '" + driveId + "'",
+              corpora: 'drive',
+              driveId,
+              includeItemsFromAllDrives: true,
+              supportsAllDrives: true,
+              fields: 'nextPageToken, files(id, name, mimeType, webViewLink, driveId, parents)',
+              pageSize: 200,
+            });
+            return retry.data.files || [];
+          } catch (retryErr) {
+            console.error('❌ Error después de renovar tokens:', retryErr);
+            return [];
+          }
+        } else {
+          console.log('❌ No se pudo renovar automáticamente. Necesita renovación manual.');
+          return [];
+        }
+      }
+      
       return [];
     }
   }
