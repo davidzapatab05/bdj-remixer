@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { googleDriveService } from '@/lib/googleDrive';
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
-    const url = new URL(request.url);
+    const url = new URL(_request.url);
     const action = url.searchParams.get('action') || 'shared-drives';
     const folderId = url.searchParams.get('folderId') || undefined;
     const driveId = url.searchParams.get('driveId') || undefined;
