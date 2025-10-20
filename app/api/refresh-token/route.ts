@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { google } from 'googleapis';
 import { config } from '@/lib/config';
 
-export async function GET(_request: NextRequest) {
+export async function GET(request: NextRequest) {
   try {
     const oauth2Client = new google.auth.OAuth2(
       config.googleDrive.clientId,

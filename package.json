@@ -2,7 +2,6 @@
   "name": "bdj-remixer",
   "version": "1.0.0",
   "private": true,
-  "engines": { "node": "22.x" },
   "description": "Acceso a unidades compartidas de Google Drive para BDJ Remixer",
   "author": "BDJ Remixer",
   "keywords": [
@@ -12,8 +11,8 @@
     "bdj-remixer"
   ],
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
+    "dev": "next dev --turbopack",
+    "build": "next build --turbopack",
     "start": "next start",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
@@ -43,9 +42,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "15.5.4",
-    
     "tailwindcss": "^4",
-    
     "typescript": "^5"
   }
 }
