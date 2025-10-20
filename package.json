@@ -2,6 +2,7 @@
   "name": "bdj-remixer",
   "version": "1.0.0",
   "private": true,
+  "engines": { "node": "22.x" },
   "description": "Acceso a unidades compartidas de Google Drive para BDJ Remixer",
   "author": "BDJ Remixer",
   "keywords": [
