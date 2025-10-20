@@ -1,6 +1,7 @@
 // app/layout.tsx
 import './globals.css'; // asegúrate de tener Tailwind configurado
 import ThemeProviders from '@/components/ThemeProvider';
+import SwRegister from '@/components/SwRegister';
 import StructuredData from '@/components/StructuredData';
 import type { Metadata } from 'next';
 
@@ -89,6 +90,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <StructuredData />
         <link rel="canonical" href={process.env.BASE_URL || 'http://localhost:3000'} />
+        <link rel="manifest" href="/manifest.webmanifest" />
         <meta name="theme-color" content="#1e40af" />
         <meta name="msapplication-TileColor" content="#1e40af" />
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
@@ -99,6 +101,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             {children}
           </main>
         </ThemeProviders>
+        <SwRegister />
       </body>
     </html>
   );
