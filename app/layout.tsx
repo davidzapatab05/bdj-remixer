@@ -3,8 +3,10 @@ import './globals.css'; // asegúrate de tener Tailwind configurado
 import ThemeProviders from '@/components/ThemeProvider';
 import StructuredData from '@/components/StructuredData';
 import type { Metadata } from 'next';
+import SwRegister from '@/components/SwRegister';
 
 export const metadata: Metadata = {
+  applicationName: 'BDJ Remixer',
   title: {
     default: 'BDJ Remixer - Música para DJs | Remixes y Pistas Exclusivas',
     template: '%s | BDJ Remixer - Música para DJs'
@@ -78,6 +80,17 @@ export const metadata: Metadata = {
       'max-snippet': -1,
     },
   },
+  // Icons for browsers and search engines
+  icons: {
+    icon: [
+      { url: '/favicon.ico', rel: 'icon', type: 'image/x-icon', sizes: '16x16 32x32 48x48' },
+    ],
+    shortcut: ['/favicon.ico'],
+    apple: [
+      { url: '/LOGO_RECORTADO.png', sizes: '180x180' },
+    ],
+  },
+  manifest: '/manifest.webmanifest',
   verification: {
     google: 'G1oKjRa4UD5EXuvruOJTJxoKUAqhijjc-j8ZJsgTE6s',
   },
@@ -88,7 +101,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="es">
       <head>
         <StructuredData />
+        <link rel="manifest" href="/manifest.webmanifest" />
         <link rel="canonical" href={process.env.BASE_URL || 'http://localhost:3000'} />
+        {/* Favicons e iconos explícitos */}
+        <link rel="icon" href="/favicon.ico" sizes="16x16 32x32 48x48" />
+        <link rel="shortcut icon" href="/favicon.ico" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180" />
         <meta name="theme-color" content="#1e40af" />
         <meta name="msapplication-TileColor" content="#1e40af" />
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
@@ -99,6 +117,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             {children}
           </main>
         </ThemeProviders>
+        <SwRegister />
       </body>
     </html>
   );
