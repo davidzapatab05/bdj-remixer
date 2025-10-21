@@ -1,14 +1,40 @@
 {
   "name": "bdj-remixer",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "private": true,
-  "description": "Acceso a unidades compartidas de Google Drive para BDJ Remixer",
-  "author": "BDJ Remixer",
+  "description": "Música exclusiva para DJs: remixes, pistas, beats y sets. Aplicación PWA con SEO optimizado y funcionamiento offline.",
+  "author": {
+    "name": "BDJ Remixer",
+    "url": "https://www.tiktok.com/@bdjremixeroficial"
+  },
+  "homepage": "https://bdjremixer.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bdjremixer/bdj-remixer"
+  },
   "keywords": [
+    "dj",
+    "music",
+    "remixes",
+    "beats",
+    "electronic-music",
+    "reggaeton",
+    "trap",
+    "house-music",
+    "techno",
+    "edm",
+    "dj-tools",
+    "music-for-djs",
+    "club-music",
+    "party-music",
+    "pwa",
     "nextjs",
     "google-drive",
     "file-sharing",
-    "bdj-remixer"
+    "bdj-remixer",
+    "music-streaming",
+    "audio-player",
+    "offline-first"
   ],
   "scripts": {
     "dev": "next dev --turbopack",
@@ -17,7 +43,8 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "type-check": "tsc --noEmit",
-    "clean": "rm -rf .next out"
+    "clean": "rm -rf .next out",
+    "icons": "node ./scripts/generate-icons.mjs"
   },
   "dependencies": {
     "@ffmpeg/ffmpeg": "^0.12.15",
@@ -43,6 +70,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "15.5.4",
+    "sharp": "^0.33.5",
     "tailwindcss": "^4",
     "typescript": "^5"
   }
