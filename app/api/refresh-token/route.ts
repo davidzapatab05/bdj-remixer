@@ -86,7 +86,7 @@ export async function POST(request: NextRequest) {
           '💾 Los tokens ahora persistirán entre reinicios'
         ]
       });
-    } catch (saveError) {
+    } catch {
       return NextResponse.json({
         success: true,
         tokens: {

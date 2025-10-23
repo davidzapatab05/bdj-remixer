@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { writeFileSync } from 'fs';
+import { writeFileSync, readFileSync } from 'fs';
 import { join } from 'path';
 
 export async function POST(request: NextRequest) {
@@ -17,8 +17,8 @@ export async function POST(request: NextRequest) {
     let envContent = '';
     
     try {
-      envContent = require('fs').readFileSync(envPath, 'utf8');
-    } catch (error) {
+      envContent = readFileSync(envPath, 'utf8');
+    } catch {
       // Si no existe, crear uno nuevo
       envContent = '';
     }
