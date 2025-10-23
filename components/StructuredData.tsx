@@ -160,7 +160,7 @@ export default function StructuredData() {
     }
   };
 
-  // Schema 6: BreadcrumbList
+  // Schema 6: BreadcrumbList - Solo página principal
   const breadcrumbSchema = {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
@@ -168,20 +168,8 @@ export default function StructuredData() {
       {
         "@type": "ListItem",
         "position": 1,
-        "name": "Inicio",
+        "name": "BDJ Remixer - Música para DJs",
         "item": baseUrl
-      },
-      {
-        "@type": "ListItem",
-        "position": 2,
-        "name": "Música para DJs",
-        "item": `${baseUrl}/#musica-dj`
-      },
-      {
-        "@type": "ListItem",
-        "position": 3,
-        "name": "Remixes Exclusivos",
-        "item": `${baseUrl}/#remixes`
       }
     ]
   };
