@@ -5,7 +5,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: 'BDJ Remixer - Música para DJs | Remixes y Pistas Exclusivas',
     short_name: 'BDJ Remixer',
     description: 'Descarga música exclusiva para DJs: remixes, pistas, beats y sets. BDJ Remixer ofrece la mejor colección de música electrónica, reggaeton, trap y más para profesionales del DJ.',
-    start_url: '/?source=pwa',
+    start_url: '/',
     scope: '/',
     display: 'standalone',
     orientation: 'portrait-primary',
@@ -19,21 +19,7 @@ export default function manifest(): MetadataRoute.Manifest {
         name: 'Buscar Música DJ',
         short_name: 'Buscar',
         description: 'Buscar música y remixes para DJs',
-        url: '/?action=search',
-        icons: [{ src: '/icons/icon-192.png', sizes: '192x192' }]
-      },
-      {
-        name: 'Remixes Exclusivos',
-        short_name: 'Remixes',
-        description: 'Explorar remixes exclusivos',
-        url: '/#remixes',
-        icons: [{ src: '/icons/icon-192.png', sizes: '192x192' }]
-      },
-      {
-        name: 'Contacto WhatsApp',
-        short_name: 'Contacto',
-        description: 'Contactar por WhatsApp',
-        url: '/?action=whatsapp',
+        url: '/',
         icons: [{ src: '/icons/icon-192.png', sizes: '192x192' }]
       }
     ],
