@@ -17,7 +17,7 @@ export async function GET() {
         'https://www.googleapis.com/auth/drive.readonly',
         'https://www.googleapis.com/auth/drive.metadata.readonly'
       ],
-      prompt: 'consent' // Forzar consentimiento para obtener nuevo refresh token
+      prompt: 'select_account' // Solo pedir consentimiento si es necesario, no forzar
     });
 
     return NextResponse.json({ 
@@ -59,20 +59,51 @@ export async function POST(request: NextRequest) {
     // Intercambiar código por tokens
     const { tokens } = await oauth2Client.getToken(code);
     
-    return NextResponse.json({
-      success: true,
-      tokens: {
-        access_token: tokens.access_token,
-        refresh_token: tokens.refresh_token,
-        expiry_date: tokens.expiry_date
-      },
-      instructions: [
-        'Actualiza tu archivo .env.local con estos nuevos tokens:',
-        `GOOGLE_ACCESS_TOKEN=${tokens.access_token}`,
-        `GOOGLE_REFRESH_TOKEN=${tokens.refresh_token}`,
-        'Reinicia tu aplicación para que los cambios surtan efecto'
-      ]
-    });
+    // Guardar tokens automáticamente
+    try {
+      const saveResponse = await fetch(`${process.env.BASE_URL || 'http://localhost:3000'}/api/save-tokens`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          access_token: tokens.access_token,
+          refresh_token: tokens.refresh_token
+        })
+      });
+      
+      const saveResult = await saveResponse.json();
+      
+      return NextResponse.json({
+        success: true,
+        tokens: {
+          access_token: tokens.access_token,
+          refresh_token: tokens.refresh_token,
+          expiry_date: tokens.expiry_date
+        },
+        autoSave: saveResult.success,
+        instructions: [
+          '✅ Tokens obtenidos y guardados automáticamente',
+          '🔄 Reinicia tu aplicación para que los cambios surtan efecto',
+          '💾 Los tokens ahora persistirán entre reinicios'
+        ]
+      });
+    } catch (saveError) {
+      return NextResponse.json({
+        success: true,
+        tokens: {
+          access_token: tokens.access_token,
+          refresh_token: tokens.refresh_token,
+          expiry_date: tokens.expiry_date
+        },
+        autoSave: false,
+        instructions: [
+          '✅ Tokens obtenidos exitosamente',
+          '⚠️ Guardado automático falló, actualiza manualmente tu .env.local:',
+          `GOOGLE_ACCESS_TOKEN=${tokens.access_token}`,
+          `GOOGLE_REFRESH_TOKEN=${tokens.refresh_token}`,
+          '🔄 Reinicia tu aplicación para que los cambios surtan efecto'
+        ]
+      });
+    }
 
   } catch (error: unknown) {
     console.error('Error exchanging token:', error);

@@ -14,7 +14,7 @@ export default function SwRegister() {
           // Intento de actualización al cargar
           reg.update().catch(() => {});
         }
-      } catch (_) {
+      } catch {
         // Silenciar errores de registro para no afectar UX
       }
     };

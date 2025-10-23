@@ -78,9 +78,20 @@ export class GoogleDriveService {
       console.log('✅ Tokens renovados exitosamente');
       this.tokenRefreshAttempts = 0; // Reset counter on success
       
-      // Aquí podrías guardar los nuevos tokens en una base de datos o archivo
-      // para persistencia entre reinicios de la aplicación
-      console.log('💾 Nuevos tokens obtenidos:', {
+      // 🔥 GUARDAR NUEVOS TOKENS EN VARIABLES DE ENTORNO
+      if (credentials.access_token) {
+        process.env.GOOGLE_ACCESS_TOKEN = credentials.access_token;
+        console.log('💾 Nuevo access_token guardado en memoria');
+      }
+      
+      if (credentials.refresh_token) {
+        process.env.GOOGLE_REFRESH_TOKEN = credentials.refresh_token;
+        console.log('💾 Nuevo refresh_token guardado en memoria');
+        console.log('⚠️ IMPORTANTE: Actualiza tu .env.local con el nuevo refresh_token para persistencia');
+        console.log(`GOOGLE_REFRESH_TOKEN=${credentials.refresh_token}`);
+      }
+      
+      console.log('💾 Tokens renovados:', {
         access_token: credentials.access_token ? '***' + credentials.access_token.slice(-4) : 'N/A',
         refresh_token: credentials.refresh_token ? '***' + credentials.refresh_token.slice(-4) : 'N/A',
         expiry_date: credentials.expiry_date

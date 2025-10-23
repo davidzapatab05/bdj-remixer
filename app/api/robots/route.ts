@@ -8,7 +8,7 @@ export async function GET() {
     // Convertir a texto plano
     let robotsTxt = '';
     
-    (robotsData.rules as any[]).forEach((rule: any) => {
+    (robotsData.rules as Array<{userAgent: string; allow?: string | string[]; disallow?: string | string[]}>).forEach((rule) => {
       robotsTxt += `User-agent: ${rule.userAgent}\n`;
       
       if (rule.allow) {
