@@ -178,21 +178,21 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const baseUrl = process.env.BASE_URL || 'http://localhost:3000';
-  
+
   return (
     <html lang="es" dir="ltr">
       <head>
         <StructuredData />
-        
+
         {/* Canonical & Manifest */}
         <link rel="canonical" href={baseUrl} />
         <link rel="manifest" href="/manifest.webmanifest" />
-        
+
         {/* Preconnect for performance */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://www.googletagmanager.com" />
         <link rel="dns-prefetch" href="https://www.google-analytics.com" />
-        
+
         {/* PWA & Mobile Meta Tags */}
         <meta name="theme-color" content="#1e40af" media="(prefers-color-scheme: light)" />
         <meta name="theme-color" content="#1e40af" media="(prefers-color-scheme: dark)" />
@@ -203,24 +203,24 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="BDJ Remixer" />
         <meta name="mobile-web-app-capable" content="yes" />
-        
+
         {/* Viewport & Device Optimization */}
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes, viewport-fit=cover" />
         <meta name="HandheldFriendly" content="true" />
         <meta name="MobileOptimized" content="320" />
-        
+
         {/* Apple Touch Icons */}
         <link rel="apple-touch-icon" href="/icons/icon-192.png" />
         <link rel="apple-touch-icon" sizes="192x192" href="/icons/icon-192.png" />
         <link rel="apple-touch-icon" sizes="512x512" href="/icons/icon-512.png" />
         <link rel="apple-touch-startup-image" href="/LOGO.png" />
-        
+
         {/* Language & Location */}
         <meta httpEquiv="content-language" content="es" />
         <meta name="language" content="Spanish" />
         <meta name="geo.region" content="PE" />
         <meta name="geo.placename" content="Peru" />
-        
+
         {/* Dublin Core Metadata */}
         <meta name="DC.title" content="BDJ Remixer - Música para DJs | Remixes y Pistas Exclusivas" />
         <meta name="DC.creator" content="BDJ Remixer" />
@@ -231,12 +231,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="DC.type" content="Interactive Resource" />
         <meta name="DC.format" content="text/html" />
         <meta name="DC.language" content="es" />
-        
+
         {/* Social Media & Rich Previews */}
         <meta property="og:type" content="website" />
         <meta property="og:site_name" content="BDJ Remixer" />
         <meta name="twitter:card" content="summary_large_image" />
-        
+
         {/* Additional SEO Tags */}
         <meta name="rating" content="general" />
         <meta name="distribution" content="global" />
