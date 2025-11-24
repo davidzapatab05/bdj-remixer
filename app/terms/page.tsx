@@ -39,12 +39,12 @@ export default function TermsOfService() {
                         <h2 className="text-2xl font-semibold text-white mb-4">1. Aceptación de los Términos</h2>
                         <p className="leading-relaxed">
                             Bienvenido a <strong>BDJ Remixer</strong>. Al acceder y utilizar esta aplicación web, aceptas estar
-                            sujeto a estos Términos y Condiciones del Servicio ("Términos"). Si no estás de acuerdo con alguna
+                            sujeto a estos Términos y Condiciones del Servicio (&quot;Términos&quot;). Si no estás de acuerdo con alguna
                             parte de estos términos, no debes utilizar nuestra aplicación.
                         </p>
                         <p className="leading-relaxed mt-3">
-                            Estos Términos constituyen un acuerdo legal vinculante entre tú ("Usuario" o "tú") y BDJ Remixer
-                            ("nosotros", "nuestro" o "la Aplicación").
+                            Estos Términos constituyen un acuerdo legal vinculante entre tú (&quot;Usuario&quot; o &quot;tú&quot;) y BDJ Remixer
+                            (&quot;nosotros&quot;, &quot;nuestro&quot; o &quot;la Aplicación&quot;).
                         </p>
                     </section>
 
@@ -135,7 +135,7 @@ export default function TermsOfService() {
 
                         <h3 className="text-xl font-semibold text-purple-300 mb-3 mt-4">5.3 Marcas Registradas</h3>
                         <p className="leading-relaxed">
-                            "BDJ Remixer" y todos los logos relacionados son marcas registradas o marcas comerciales de
+                            &quot;BDJ Remixer&quot; y todos los logos relacionados son marcas registradas o marcas comerciales de
                             BDJ Remixer. No puedes usar estas marcas sin nuestro consentimiento previo por escrito.
                         </p>
                     </section>
@@ -200,9 +200,9 @@ export default function TermsOfService() {
                     <section>
                         <h2 className="text-2xl font-semibold text-white mb-4">9. Descargos de Responsabilidad</h2>
 
-                        <h3 className="text-xl font-semibold text-purple-300 mb-3 mt-4">9.1 "Como Está"</h3>
+                        <h3 className="text-xl font-semibold text-purple-300 mb-3 mt-4">9.1 &quot;Como Está&quot;</h3>
                         <p className="leading-relaxed">
-                            El servicio se proporciona "como está" y "según disponibilidad" sin garantías de ningún tipo,
+                            El servicio se proporciona &quot;como está&quot; y &quot;según disponibilidad&quot; sin garantías de ningún tipo,
                             ya sean expresas o implícitas, incluyendo pero no limitado a garantías de comerciabilidad,
                             idoneidad para un propósito particular o no infracción.
                         </p>

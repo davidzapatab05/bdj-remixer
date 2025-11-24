@@ -38,7 +38,7 @@ export default function PrivacyPolicy() {
                     <section>
                         <h2 className="text-2xl font-semibold text-white mb-4">1. Introducción</h2>
                         <p className="leading-relaxed">
-                            En <strong>BDJ Remixer</strong> ("nosotros", "nuestro" o "la aplicación"), nos comprometemos a proteger
+                            En <strong>BDJ Remixer</strong> (&quot;nosotros&quot;, &quot;nuestro&quot; o &quot;la aplicación&quot;), nos comprometemos a proteger
                             tu privacidad y tus datos personales. Esta Política de Privacidad explica qué información recopilamos,
                             cómo la usamos, y tus derechos respecto a tus datos cuando utilizas nuestra aplicación web.
                         </p>
@@ -193,7 +193,7 @@ export default function PrivacyPolicy() {
                         <h2 className="text-2xl font-semibold text-white mb-4">10. Cambios a esta Política</h2>
                         <p className="leading-relaxed">
                             Podemos actualizar nuestra Política de Privacidad periódicamente. Te notificaremos cualquier cambio
-                            publicando la nueva política en esta página y actualizando la fecha de "Última actualización".
+                            publicando la nueva política en esta página y actualizando la fecha de &quot;Última actualización&quot;.
                             Te recomendamos revisar esta política periódicamente.
                         </p>
                     </section>
