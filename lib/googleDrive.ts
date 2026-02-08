@@ -1,5 +1,6 @@
 import { google } from 'googleapis';
 import { config } from './config';
+import fs from 'fs';
 
 export interface DriveFile {
   id: string;
@@ -71,27 +72,25 @@ export class GoogleDriveService {
     try {
       this.tokenRefreshAttempts++;
       console.log(`🔄 Intentando renovar tokens (intento ${this.tokenRefreshAttempts}/${this.maxRefreshAttempts})`);
-      
+
       const { credentials } = await this.oauth2Client.refreshAccessToken();
       this.oauth2Client.setCredentials(credentials);
-      
+
       console.log('✅ Tokens renovados exitosamente');
       this.tokenRefreshAttempts = 0; // Reset counter on success
-      
+
       // 🔥 GUARDAR NUEVOS TOKENS EN VARIABLES DE ENTORNO Y ARCHIVO
       let envContent = '';
       const envPath = process.cwd() + '/.env.local';
-      
+
       try {
-        // Importar fs dinámicamente para evitar errores en build time si fuera necesario,
-        // aunque en Next.js server-side 'fs' suele estar disponible.
-        // Usamos require para asegurar que esto solo corra en node
-        const fs = require('fs');
-        
+        // Usamos import de fs al inicio del archivo
+        // const fs = require('fs');
+
         if (fs.existsSync(envPath)) {
           envContent = fs.readFileSync(envPath, 'utf8');
         }
-        
+
         let updatedContent = envContent;
         const lines = envContent.split('\n');
         const newLines = [];
@@ -127,11 +126,11 @@ export class GoogleDriveService {
         }
 
         updatedContent = newLines.join('\n');
-        
+
         // Escribir al archivo
         fs.writeFileSync(envPath, updatedContent);
         console.log('💾 Tokens guardados automáticamente en .env.local');
-        
+
       } catch (fsError) {
         console.error('⚠️ No se pudo escribir en .env.local (posiblemente en producción/Vercel readonly):', fsError);
         // En Vercel no se puede escribir en el sistema de archivos, pero en local sí.
@@ -140,13 +139,13 @@ export class GoogleDriveService {
         // Si está en VPS/Local, esto funciona. Si es Vercel, necesita DB.
         // Asumiremos entorno local/VPS por ahora dado el acceso a archivos.
       }
-      
+
       console.log('💾 Tokens renovados:', {
         access_token: credentials.access_token ? '***' + credentials.access_token.slice(-4) : 'N/A',
         refresh_token: credentials.refresh_token ? '***' + credentials.refresh_token.slice(-4) : 'N/A',
         expiry_date: credentials.expiry_date
       });
-      
+
       return true;
     } catch (error) {
       console.error('❌ Error renovando tokens:', error);
@@ -157,14 +156,14 @@ export class GoogleDriveService {
   // Verificar si el usuario actual tiene acceso a un drive compartido
   async checkUserAccess(driveId: string): Promise<boolean> {
     if (!this.drive) return false;
-    
+
     try {
       // Intentar acceder al drive compartido
       await this.drive.drives.get({
         driveId: driveId,
         fields: 'id,name,capabilities'
       });
-      
+
       // Si llegamos aquí, el usuario tiene acceso
       return true;
     } catch (err: unknown) {
@@ -177,7 +176,7 @@ export class GoogleDriveService {
   // Verificar permisos de un archivo específico
   async checkFileAccess(fileId: string): Promise<boolean> {
     if (!this.drive) return false;
-    
+
     try {
       await this.drive.files.get({
         fileId: fileId,
@@ -203,14 +202,14 @@ export class GoogleDriveService {
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : String(err);
       console.error('Error getSharedDrives:', errorMessage);
-      
+
       // Verificar si es error de token expirado
       if (errorMessage.includes('invalid_grant') || errorMessage.includes('invalid_token')) {
         console.log('🔄 Token expirado detectado. Intentando renovación automática...');
-        
+
         // Intentar renovar tokens automáticamente
         const refreshSuccess = await this.refreshTokens();
-        
+
         if (refreshSuccess) {
           console.log('🔄 Reintentando operación con tokens renovados...');
           try {
@@ -229,7 +228,7 @@ export class GoogleDriveService {
           return [];
         }
       }
-      
+
       return [];
     }
   }
@@ -239,7 +238,7 @@ export class GoogleDriveService {
     if (!this.drive) return [];
     try {
       // Obteniendo carpetas raíz
-      
+
       // Obtener SOLO las carpetas raíz del drive compartido
       const res = await this.drive.files.list({
         q: "mimeType='application/vnd.google-apps.folder' and trashed=false and parents in '" + driveId + "'",
@@ -251,18 +250,18 @@ export class GoogleDriveService {
         pageSize: 200,
         // No usar orderBy aquí, lo haremos manualmente para ordenamiento numérico
       });
-      
+
       const rootFolders = res.data.files || [];
-      
+
       // Ordenamiento numérico inteligente
       const sortedFolders = rootFolders.sort((a: DriveFolder, b: DriveFolder) => {
         const nameA = a.name.toLowerCase();
         const nameB = b.name.toLowerCase();
-        
+
         // Extraer números del inicio de los nombres
         const numA = nameA.match(/^(\d+)/);
         const numB = nameB.match(/^(\d+)/);
-        
+
         if (numA && numB) {
           // Si ambos tienen números al inicio, ordenar numéricamente
           const numAValue = parseInt(numA[1], 10);
@@ -279,20 +278,20 @@ export class GoogleDriveService {
           return nameA.localeCompare(nameB);
         }
       });
-      
+
       // Carpetas ordenadas
-      
+
       return sortedFolders;
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : String(err);
       console.error('Error getFoldersInDrive:', errorMessage);
-      
+
       // Verificar si es error de token expirado
       if (errorMessage.includes('invalid_grant') || errorMessage.includes('invalid_token')) {
         console.log('🔄 Token expirado detectado. Intentando renovación automática...');
-        
+
         const refreshSuccess = await this.refreshTokens();
-        
+
         if (refreshSuccess) {
           console.log('🔄 Reintentando operación con tokens renovados...');
           try {
@@ -315,7 +314,7 @@ export class GoogleDriveService {
           return [];
         }
       }
-      
+
       return [];
     }
   }
@@ -334,18 +333,18 @@ export class GoogleDriveService {
         pageSize: 200,
         // No usar orderBy aquí, lo haremos manualmente para ordenamiento numérico
       });
-      
+
       const files = res.data.files || [];
-      
+
       // Aplicar el mismo ordenamiento numérico inteligente
       const sortedFiles = files.sort((a: DriveFile, b: DriveFile) => {
         const nameA = a.name.toLowerCase();
         const nameB = b.name.toLowerCase();
-        
+
         // Extraer números del inicio de los nombres
         const numA = nameA.match(/^(\d+)/);
         const numB = nameB.match(/^(\d+)/);
-        
+
         if (numA && numB) {
           // Si ambos tienen números al inicio, ordenar numéricamente
           const numAValue = parseInt(numA[1], 10);
@@ -362,7 +361,7 @@ export class GoogleDriveService {
           return nameA.localeCompare(nameB);
         }
       });
-      
+
       return sortedFiles;
     } catch (err) {
       console.error('Error getFilesInFolder:', err);
@@ -376,10 +375,10 @@ export class GoogleDriveService {
     try {
       // Escapar caracteres especiales para la query de Google Drive
       const escapedQuery = q.replace(/['"]/g, "\\'");
-      
+
       // Query que busca SOLO archivos (no carpetas ni unidades)
       const query = `name contains '${escapedQuery}' and trashed=false and mimeType != 'application/vnd.google-apps.folder'`;
-      
+
       const res = await this.drive.files.list({
         q: query,
         includeItemsFromAllDrives: true,
@@ -389,40 +388,40 @@ export class GoogleDriveService {
         fields: 'nextPageToken, files(id, name, mimeType, webViewLink, thumbnailLink, driveId, parents)',
         pageSize: 200,
       });
-      
+
       const files = res.data.files || [];
-      
+
       // Filtrar resultados para coincidencias más precisas - SOLO ARCHIVOS DE AUDIO
       const audioMimeTypes = [
         'audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/m4a',
         'audio/mp4', 'audio/aac', 'audio/ogg', 'audio/flac',
         'audio/x-m4a', 'audio/x-mp4'
       ];
-      
+
       const filteredFiles = files.filter((file: DriveFile) => {
         // Solo archivos de audio
-        const isAudioFile = audioMimeTypes.some(mimeType => 
-          file.mimeType.includes(mimeType.split('/')[1]) || 
+        const isAudioFile = audioMimeTypes.some(mimeType =>
+          file.mimeType.includes(mimeType.split('/')[1]) ||
           file.mimeType === mimeType
         );
-        
+
         if (!isAudioFile) return false;
-        
+
         const fileName = file.name.toLowerCase();
         const searchTerm = q.toLowerCase();
-        
+
         // Coincidencia exacta o parcial
         const exactMatch = fileName.includes(searchTerm);
         // Coincidencia sin espacios
         const noSpacesMatch = fileName.includes(searchTerm.replace(/\s+/g, ''));
         // Coincidencia por palabras individuales
-        const wordMatch = searchTerm.split(' ').every(word => 
+        const wordMatch = searchTerm.split(' ').every(word =>
           word.length > 0 && fileName.includes(word)
         );
-        
+
         return exactMatch || noSpacesMatch || wordMatch;
       });
-      
+
       return filteredFiles;
     } catch (err) {
       console.error('Error searchFiles:', err);
@@ -457,7 +456,7 @@ export class GoogleDriveService {
       }, {
         responseType: 'arraybuffer'
       });
-      
+
       return Buffer.from(res.data as ArrayBuffer);
     } catch (err) {
       console.error('Error downloadFile:', err);
