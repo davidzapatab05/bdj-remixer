@@ -5,7 +5,10 @@ const nextConfig: NextConfig = {
   experimental: {
     optimizePackageImports: ['lucide-react'],
   },
-  
+  compiler: {
+    removeConsole: process.env.NODE_ENV === 'production',
+  },
+
   // Configuración de imágenes para Google Drive
   images: {
     remotePatterns: [
@@ -27,7 +30,7 @@ const nextConfig: NextConfig = {
 
   // Configuración de compresión
   compress: true,
-  
+
   // Generación de sitemap y manifest
   generateBuildId: async () => {
     return `bdj-remixer-${Date.now()}`;
@@ -167,7 +170,7 @@ const nextConfig: NextConfig = {
       },
     ];
   },
-  
+
   // Rewrites para rutas limpias
   async rewrites() {
     return [
