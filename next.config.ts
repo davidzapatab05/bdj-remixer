@@ -42,7 +42,16 @@ const nextConfig: NextConfig = {
       {
         source: '/:path*',
         headers: [
-          // Seguridad
+          // Seguridad mandatoria para SharedArrayBuffer (usado por ffmpeg.wasm)
+          {
+            key: 'Cross-Origin-Embedder-Policy',
+            value: 'require-corp',
+          },
+          {
+            key: 'Cross-Origin-Opener-Policy',
+            value: 'same-origin',
+          },
+          // Otras cabeceras de seguridad
           {
             key: 'X-Frame-Options',
             value: 'DENY',
@@ -68,10 +77,19 @@ const nextConfig: NextConfig = {
             key: 'X-DNS-Prefetch-Control',
             value: 'on',
           },
-          // Cache Control para assets estáticos
+        ],
+      },
+      // Cabeceras específicas para recursos de FFmpeg
+      {
+        source: '/ffmpeg/:path*',
+        headers: [
           {
             key: 'Cache-Control',
             value: 'public, max-age=31536000, immutable',
+          },
+          {
+            key: 'Cross-Origin-Resource-Policy',
+            value: 'cross-origin',
           },
         ],
       },
