@@ -78,17 +78,67 @@ export class GoogleDriveService {
       console.log('✅ Tokens renovados exitosamente');
       this.tokenRefreshAttempts = 0; // Reset counter on success
       
-      // 🔥 GUARDAR NUEVOS TOKENS EN VARIABLES DE ENTORNO
-      if (credentials.access_token) {
-        process.env.GOOGLE_ACCESS_TOKEN = credentials.access_token;
-        console.log('💾 Nuevo access_token guardado en memoria');
-      }
+      // 🔥 GUARDAR NUEVOS TOKENS EN VARIABLES DE ENTORNO Y ARCHIVO
+      let envContent = '';
+      const envPath = process.cwd() + '/.env.local';
       
-      if (credentials.refresh_token) {
-        process.env.GOOGLE_REFRESH_TOKEN = credentials.refresh_token;
-        console.log('💾 Nuevo refresh_token guardado en memoria');
-        console.log('⚠️ IMPORTANTE: Actualiza tu .env.local con el nuevo refresh_token para persistencia');
-        console.log(`GOOGLE_REFRESH_TOKEN=${credentials.refresh_token}`);
+      try {
+        // Importar fs dinámicamente para evitar errores en build time si fuera necesario,
+        // aunque en Next.js server-side 'fs' suele estar disponible.
+        // Usamos require para asegurar que esto solo corra en node
+        const fs = require('fs');
+        
+        if (fs.existsSync(envPath)) {
+          envContent = fs.readFileSync(envPath, 'utf8');
+        }
+        
+        let updatedContent = envContent;
+        const lines = envContent.split('\n');
+        const newLines = [];
+        let accessTokenUpdated = false;
+        let refreshTokenUpdated = false;
+
+        // Actualizar variables en memoria
+        if (credentials.access_token) {
+          process.env.GOOGLE_ACCESS_TOKEN = credentials.access_token;
+        }
+        if (credentials.refresh_token) {
+          process.env.GOOGLE_REFRESH_TOKEN = credentials.refresh_token;
+        }
+
+        // Preparar contenido del archivo
+        for (const line of lines) {
+          if (line.startsWith('GOOGLE_ACCESS_TOKEN=') && credentials.access_token) {
+            newLines.push(`GOOGLE_ACCESS_TOKEN=${credentials.access_token}`);
+            accessTokenUpdated = true;
+          } else if (line.startsWith('GOOGLE_REFRESH_TOKEN=') && credentials.refresh_token) {
+            newLines.push(`GOOGLE_REFRESH_TOKEN=${credentials.refresh_token}`);
+            refreshTokenUpdated = true;
+          } else {
+            newLines.push(line);
+          }
+        }
+
+        if (!accessTokenUpdated && credentials.access_token) {
+          newLines.push(`GOOGLE_ACCESS_TOKEN=${credentials.access_token}`);
+        }
+        if (!refreshTokenUpdated && credentials.refresh_token) {
+          newLines.push(`GOOGLE_REFRESH_TOKEN=${credentials.refresh_token}`);
+        }
+
+        updatedContent = newLines.join('\n');
+        
+        // Escribir al archivo
+        fs.writeFileSync(envPath, updatedContent);
+        console.log('💾 Tokens guardados automáticamente en .env.local');
+        
+      } catch (fsError) {
+        console.error('⚠️ No se pudo escribir en .env.local (posiblemente en producción/Vercel readonly):', fsError);
+        // En Vercel no se puede escribir en el sistema de archivos, pero en local sí.
+        // Para producción real en Vercel, se necesitaría una base de datos.
+        // Pero el usuario pidió "para producción" y "que dure años".
+        // Si está en VPS/Local, esto funciona. Si es Vercel, necesita DB.
+        // Asumiremos entorno local/VPS por ahora dado el acceso a archivos.
       }
       
       console.log('💾 Tokens renovados:', {
